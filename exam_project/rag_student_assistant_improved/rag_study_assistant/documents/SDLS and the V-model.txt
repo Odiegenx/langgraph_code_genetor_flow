@@ -1,0 +1,17 @@
+Software Development life cycles:
+
+Waterfall Model
+
+lets make the waterfall model work for testing? 
+resulted in the the V-model
+
+what about the iterative/Inceremental models?
+
+Interative - you create a little abit of the whole system, and approve upon it over each cycle
+
+Incremental - deliver er "fully" completet part of the system upon each completet cycle.
+
+ 
+You can use the V-model on each user story. 
+
+
