@@ -24,6 +24,6 @@ class PromptBuilder:
             f"[Source: {chunk['source']}]\n{chunk['content']}"
             for chunk in context_chunks
         )
-        prompt = self.template.replace("{context}", context_text)
-        prompt = prompt.replace("{question}", question)
+        prompt = self.template.replace("{{context}}", context_text)
+        prompt = prompt.replace("{{question}}", question)
         return prompt

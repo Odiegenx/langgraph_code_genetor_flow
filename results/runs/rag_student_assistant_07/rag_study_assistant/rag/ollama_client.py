@@ -1,18 +1,18 @@
 import os
 import json
 import requests
-from typing import Dict, Any, Tuple, Union
+from typing import Dict, Any, Tuple
 
 OLLAMA_API_URL = "http://localhost:11434/api/chat"
-DEFAULT_MODEL = "glm-4.6:cloud"
+DEFAULT_MODEL = "qwen3:8b"
 
 def get_model() -> str:
     return os.getenv("OLLAMA_MODEL", DEFAULT_MODEL)
 
-def ask_ollama(prompt: str) -> Union[Tuple[str, float], str]:
+def ask_ollama(prompt: str) -> Tuple[str, float]:
     """
     Send prompt to Ollama API and return answer and confidence.
-    Returns: (answer_text, confidence_score) or just answer_text
+    Returns: (answer_text, confidence_score)
     """
     payload = {
         "model": get_model(),
@@ -30,6 +30,6 @@ def ask_ollama(prompt: str) -> Union[Tuple[str, float], str]:
         answer = data.get("message", {}).get("content", "").strip()
         return answer, 0.95  # Static confidence for now
     except requests.exceptions.ConnectionError:
-        return "[Error] Cannot connect to Ollama. Please ensure it is running."
+        return "[Error] Cannot connect to Ollama. Please ensure it is running.", 0.0
     except Exception as e:
-        return f"[Error] {str(e)}"
+        return f"[Error] {str(e)}", 0.0

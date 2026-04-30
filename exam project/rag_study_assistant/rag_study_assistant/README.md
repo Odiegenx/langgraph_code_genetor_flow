@@ -118,29 +118,6 @@ Check that Ollama service is running:
 ollama list
 ```
 
-#### Ollama 401 Unauthorized
-If the app shows:
-
-```text
-[Error] An issue occurred while contacting Ollama: 401 Client Error: Unauthorized
-```
-
-then Ollama is running, but the selected model requires authentication. This normally happens when using an Ollama cloud model.
-
-Sign in to Ollama:
-
-```bash
-ollama signin
-```
-
-Then restart the Flask app.
-
-If you do not want to use an Ollama cloud model, change `DEFAULT_MODEL` in `rag/ollama_client.py` to a local model listed by:
-
-```bash
-ollama list
-```
-
 #### Empty Answers
 Verify that `index/chunks.json` exists and contains data. Re-run `rag/ingest.py` if needed.
 

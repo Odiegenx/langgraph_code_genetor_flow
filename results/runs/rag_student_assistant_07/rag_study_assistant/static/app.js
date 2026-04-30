@@ -1,24 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const questionForm = document.getElementById('question-form');
     const questionInput = document.getElementById('question-input');
-    const submitButton = document.getElementById('submit-btn');
-    const ingestButton = document.getElementById('ingest-btn');
-    const answerSection = document.getElementById('answer-section');
-    const answerContent = document.getElementById('answer-content');
-    const sourcesList = document.getElementById('sources-list');
-    const loading = document.getElementById('loading');
-    const ollamaStatus = document.getElementById('ollama-status');
-    const indexStatus = document.getElementById('index-status');
+    const answerArea = document.getElementById('answer-area');
+    const citationsList = document.getElementById('citations-list');
+    const statusIndicator = document.getElementById('status-indicator');
+    const loadingSpinner = document.getElementById('loading-spinner');
 
+    // Update status on load
     updateStatus();
 
-    submitButton.addEventListener('click', async () => {
+    questionForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const question = questionInput.value.trim();
         if (!question) return;
 
-        setLoading(true);
-        answerSection.classList.remove('hidden');
-        answerContent.textContent = '';
-        sourcesList.innerHTML = '';
+        // Show loading state
+        loadingSpinner.style.display = 'block';
+        answerArea.innerHTML = '';
+        citationsList.innerHTML = '';
 
         try {
             const response = await fetch('/ask', {
@@ -30,43 +29,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                answerContent.textContent = data.answer || 'No answer returned.';
-
+                // Display answer
+                answerArea.innerHTML = `<p>${data.answer}</p>`;
+                
+                // Display citations
                 if (data.citations && data.citations.length > 0) {
-                    sourcesList.innerHTML = data.citations.map(cite =>
-                        `<li><strong>${escapeHtml(cite.source || 'Unknown source')}</strong> ` +
-                        `(Page: ${escapeHtml(String(cite.page || 'n/a'))})<br>` +
-                        `${escapeHtml(cite.snippet || '')}</li>`
-                    ).join('');
+                    citationsList.innerHTML = '<h4>_sources:</h4><ul>' +
+                        data.citations.map(cite => 
+                            `<li><strong>${cite.source}</strong> (p.${cite.page}): ${cite.snippet}</li>`
+                        ).join('') + '</ul>';
                 }
             } else {
-                answerContent.textContent = `Error: ${data.error || 'Failed to get response'}`;
+                answerArea.innerHTML = `<p class="error">Error: ${data.error || 'Failed to get response'}</p>`;
             }
         } catch (err) {
-            answerContent.textContent = `Network error: ${err.message}`;
+            answerArea.innerHTML = `<p class="error">Network error: ${err.message}</p>`;
         } finally {
-            setLoading(false);
-            updateStatus();
-        }
-    });
-
-    ingestButton.addEventListener('click', async () => {
-        setLoading(true, 'Re-ingesting documents...');
-        answerSection.classList.remove('hidden');
-        answerContent.textContent = '';
-        sourcesList.innerHTML = '';
-
-        try {
-            const response = await fetch('/ingest', { method: 'POST' });
-            const data = await response.json();
-            answerContent.textContent = response.ok
-                ? data.message || 'Ingestion completed.'
-                : `Ingestion failed: ${data.error || 'Unknown error'}`;
-        } catch (err) {
-            answerContent.textContent = `Network error: ${err.message}`;
-        } finally {
-            setLoading(false);
-            updateStatus();
+            loadingSpinner.style.display = 'none';
         }
     });
 
@@ -74,33 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/status');
             const data = await response.json();
-
-            ollamaStatus.textContent = 'Not checked here. Answers require Ollama on localhost:11434.';
-            indexStatus.textContent = data.index_ready
-                ? `Ready. Documents folder: ${data.documents_available ? 'has files' : 'empty'}`
-                : `Missing. Documents folder: ${data.documents_available ? 'has files' : 'empty'}`;
+            
+            statusIndicator.innerHTML = `
+                <span>Ollama: ${data.ollama ? '🟢 Connected' : '🔴 Disconnected'}</span>
+                <span>Index: ${data.indexed ? '📚 Ready' : '📝 Not Indexed'}</span>
+            `;
         } catch (err) {
-            ollamaStatus.textContent = 'Unknown';
-            indexStatus.textContent = `Status check failed: ${err.message}`;
+            statusIndicator.innerHTML = `<span class="error">Status check failed</span>`;
         }
     }
 
-    function setLoading(isLoading, message = '⏳ Processing your question...') {
-        loading.textContent = message;
-        loading.classList.toggle('hidden', !isLoading);
-        submitButton.disabled = isLoading;
-        ingestButton.disabled = isLoading;
-    }
-
-    function escapeHtml(value) {
-        return value.replace(/[&<>"']/g, char => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        }[char]));
-    }
-
+    // Poll status every 10 seconds
     setInterval(updateStatus, 10000);
 });

@@ -106,3 +106,30 @@ def extract_context_snippet(content, query, window_size=DEFAULT_CONTEXT_WINDOW):
     start = max(0, match.start() - window_size // 2)
     end = min(len(content), match.end() + window_size // 2)
     return content[start:end]
+
+
+def retrieve_relevant_chunks(query, k=TOP_K):
+    """
+    Retrieve top-k most relevant chunks for the given query.
+    Each returned chunk includes metadata and a context snippet.
+    """
+    data = load_index()
+    chunks = data.get("chunks", [])
+    scores = score_chunks(query, chunks)
+
+    # Sort chunks by score descending
+    ranked_chunks = sorted(chunks, key=lambda c: scores[c['chunk_id']], reverse=True)
+
+    results = []
+    for chunk in ranked_chunks[:k]:
+        snippet = extract_context_snippet(chunk['content'], query)
+        results.append({
+            "chunk_id": chunk['chunk_id'],
+            "filename": chunk['metadata']['filename'],
+            "page_number": chunk['metadata'].get('page_number'),
+            "score": scores[chunk['chunk_id']],
+            "snippet": snippet,
+            "content": chunk['content']
+        })
+
+    return results

@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify, render_template
 import os
 import json
 from rag.ingest import process_documents
-from rag.retrieve import score_chunks, load_index
-from rag.prompt_builder import PromptBuilder
+from rag.retrieve import retrieve_chunks
+from rag.prompt_builder import build_rag_prompt
 from rag.ollama_client import ask_ollama
 
 app = Flask(__name__)
@@ -27,38 +27,16 @@ def ask_question():
         if not os.path.exists(INDEX_FILE):
             return jsonify({"error": "No index found. Please run ingestion first."}), 400
 
-        chunks = load_index()
-        scores = score_chunks(question, chunks)
-        
-        # Sort chunks by score and take top 3
-        sorted_chunks = sorted(chunks, key=lambda c: scores.get(c['chunk_id'], 0), reverse=True)[:3]
-        
-        # Prepare context for prompt builder
-        context_chunks = [
-            {
-                'content': chunk['content'],
-                'source': chunk['filename']
-            }
-            for chunk in sorted_chunks
-        ]
-        
-        prompt_builder = PromptBuilder()
-        prompt = prompt_builder.build_prompt(context_chunks, question)
-        answer = ask_ollama(prompt)
+        with open(INDEX_FILE, "r") as f:
+            chunks = json.load(f)
 
-        # Format retrieved chunks for citations
-        retrieved = [
-            {
-                'source': chunk['filename'],
-                'page': chunk.get('page', 1),
-                'snippet': chunk['content'][:200] + '...'
-            }
-            for chunk in sorted_chunks
-        ]
+        retrieved = retrieve_chunks(question, chunks, k=3)
+        prompt = build_rag_prompt(retrieved, question)
+        answer_data = ask_ollama(prompt)
 
         return jsonify({
-            "answer": answer[0] if isinstance(answer, tuple) else answer,
-            "citations": retrieved
+            "answer": answer_data.get("answer", ""),
+            "sources": retrieved
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -66,8 +44,8 @@ def ask_question():
 @app.route("/ingest", methods=["POST"])
 def ingest_documents():
     try:
-        process_documents()
-        return jsonify({"message": "Ingestion completed"}), 200
+        result = process_documents(DOCUMENTS_DIR, INDEX_FILE)
+        return jsonify({"message": "Ingestion completed", "result": result}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
