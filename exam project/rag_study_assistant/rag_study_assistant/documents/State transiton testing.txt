@@ -1,0 +1,10 @@
+perticularly suited for system where outouts are triggered by changes to the input conditions or changes of state
+	ususal in hardware devices
+
+behaviour depends on:
+	current state 
+	past state 
+	transition form pas to current state
+
+
+

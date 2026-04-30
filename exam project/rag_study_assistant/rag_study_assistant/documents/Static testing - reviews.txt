@@ -1,0 +1,137 @@
+Static techniques test software without executing it
+	They may find errors early in the life of the project
+	They do not find failures, but causes of failures
+	Static techniques:
+	Review. Checking requirements and specification documents for errors
+	before they are used in development.
+	Usually manual
+	Static Code Analysis. Analyse code for structural defects or 	systematic
+
+programming weaknesses.
+	• Usually automatic
+	• Performed by linters and most IDEs
+
+Reviews:
+
+systematic examination of a document to find and remove errors.
+
+	Objectives:
+		• Finding defects
+		• Gaining understanding
+		• Generating discussion
+		• Decision making by consensus
+	Objects:
+		• Requirement specifications
+		• System designs
+		• Code
+		• Test plans
+		• Test cases
+
+Reviews and the V-model:
+
+Every step can be reviewed.
+
+A review is one of the earlies forms testing possible in a software development project (maybe beaten by risk analyst)
+
+Two major types:
+	Code review: can be performed one to one
+	Document review Basic process:
+		• The document is studied by the reviewers
+		• The author is informed of the issues found
+		• The author updates the document accordingly
+		• A next iteration is performed, if necessary
+
+Informal review
+	• Documentation not required
+	• Sometimes just a quick non-technical check
+	• Inexpensive, but limited benefit
+Walkthrough
+	• Review meeting led by the author of the document
+	• It helps team members understand the document
+	• Open-ended
+	• Preparation and production of a report are optional
+
+Technical review (including code review)
+	• Documented, well-defined detection process
+	• Peer review, desirably with no presence of management
+	• Preparation and report
+Inspection (most formal)
+	• Led by a trained moderator
+	• Peer examination of a document
+	• Pre-meeting preparation
+	• Production of an inspection report
+	• Formal follow-up
+
+
+
+Formal review process:
+
+• Planning
+	• Defining the purpose, scope, and time estimation of the review
+	• Selecting staff and allocating roles
+	• Defining the entry and exit criteria
+	• Checking that the entry criteria is met
+• Initiation
+	• Distributing the work product(s) to review
+	• Explaining to the participants the objectives, scope, work product and roles of the review
+
+
+
+
+• Individual review
+	• Reviewing the work product
+	• Logging potential defects, questions and comments
+	• Central phase (where most errors are caught)
+	• Yet optional in low-formality reviews
+• Communication and analysis
+	• Communicating potential defects in a meeting, log, emails, etc.
+	• Analysing the defects
+	• Evaluating the review results against the exit criteria
+	• The work product can be fixed, or completely rejected
+
+Review roles and responsibilities:
+
+
+Manager
+	• Decides to review and what to review
+	• Designates staff and sets budget and timeframe
+	• Not a part of the remaining review process
+Author
+	• Author of the work product to review
+Moderator = review leader
+	• Plans the review, follows up, mediates
+Reviewers
+Scribe = recorder
+	• Documents issues
+
+
+summary review report:
+
+• Written by the moderator
+• Contains
+	• Date of the meeting/communication period
+	• Names and roles of the participants
+	• Duration
+	• Size of the work product
+		• E.g., pages of an SRS,
+lines of code of a sw product
+	• Defects found broken down by severity
+		• Usually in tabular form, sorted and colour coded
+
+Success factors for reviews:
+
+
+• Objectives must be clearly predefined and agreed
+• Emphasis on learning and process improvement
+	• Defects are welcomed
+	• Defects must be expressed objectively
+	• It is the documents, not the participants, that are reviewed
+• Techniques must also be reviewed
+• Checklists or similar must be used
+
+• Possible metrics to collect:
+	• Time taken to review/inspect
+	• Number of defects found
+	• Percentage of project budget used/saved
+
+læ

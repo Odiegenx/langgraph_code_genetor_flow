@@ -1,0 +1,1 @@
+Create a small static website that works alot like ChatGPT's site. Where we can talk to an AI and have it take questions and return answers. I want the AI to be a local hosted model think ollama qwen3:8b should be fine. I would like it posible to atleast be able to copy in text to it and maybe pictures aswell.

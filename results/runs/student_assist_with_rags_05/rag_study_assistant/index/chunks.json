@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sample_course_notes_md_0",
+    "text": "# Introduction to Machine Learning\n\nMachine learning is a subset of artificial intelligence that focuses on algorithms and statistical models.",
+    "source_file": "sample_course_notes.md",
+    "chunk_index": 0
+  },
+  {
+    "id": "sample_course_notes_md_1",
+    "text": "These systems improve automatically through experience and data exposure without being explicitly programmed for every task.",
+    "source_file": "sample_course_notes.md",
+    "chunk_index": 1
+  },
+  {
+    "id": "sample_course_notes_md_2",
+    "text": "## Types of Machine Learning\n\nThere are three main types:\n- Supervised Learning\n- Unsupervised Learning\n- Reinforcement Learning",
+    "source_file": "sample_course_notes.md",
+    "chunk_index": 2
+  }
+]

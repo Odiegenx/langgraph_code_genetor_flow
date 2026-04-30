@@ -1,0 +1,47 @@
+.game-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  text-align: center;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#gameCanvas {
+  border: 2px solid #333;
+  background-color: #ecf0f1;
+}
+
+#score {
+  font-size: 1.2rem;
+  margin-top: 1rem;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 1rem;
+  text-decoration: none;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}

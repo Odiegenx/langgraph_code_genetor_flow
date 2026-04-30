@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="memory.css">
+</head>
+<body>
+  <header>
+    <h1>Memory Game</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Back to Home</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <div class="game-setup" id="setupScreen">
+      <h2>Select Picture Set</h2>
+      <div class="options">
+        <button onclick="startGame('fruits')">Fruits</button>
+        <button onclick="startGame('animals')">Animals</button>
+      </div>
+      
+      <h2>Select Difficulty</h2>
+      <div class="options">
+        <button onclick="setDifficulty(6)">Easy (6 pairs)</button>
+        <button onclick="setDifficulty(12)">Medium (12 pairs)</button>
+        <button onclick="setDifficulty(24)">Hard (24 pairs)</button>
+      </div>
+      
+      <button id="startButton" onclick="initGame()" disabled>Start Game</button>
+    </div>
+    
+    <div class="game-area" id="gameArea" style="display:none;">
+      <div class="game-stats">
+        <div>Time: <span id="timer">00:00</span></div>
+        <div>Moves: <span id="moves">0</span></div>
+        <div>High Score: <span id="highScore">-</span></div>
+      </div>
+      <div class="card-grid" id="cardGrid"></div>
+    </div>
+    
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal">
+      <div class="modal-content">
+        <h2>Congratulations!</h2>
+        <p>You completed the game in <span id="completionTime"></span> with <span id="completionMoves"></span> moves.</p>
+        <p>Your score: <span id="finalScoreDisplay"></span></p>
+        <p>High Score: <span id="currentHighScore"></span></p>
+        <button onclick="resetGame()">Play Again</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2023 Browser Games. All rights reserved.</p>
+  </footer>
+  
+  <script src="script.js"></script>
+  <script src="memory.js"></script>
+</body>
+</html>

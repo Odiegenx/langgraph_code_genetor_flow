@@ -1,0 +1,65 @@
+{
+  "project_name": "Local RAG Study Assistant",
+  "project_dir": "rag_study_assistant",
+  "validation_command": ["python", "validate_project.py"],
+  "validation_output": "site_validation_output.txt",
+  "review_output": "workflow_review.md",
+  "worker_a": {
+    "role": "Backend and RAG Pipeline Developer",
+    "required_files": [
+      "rag_study_assistant/app.py",
+      "rag_study_assistant/rag/ingest.py",
+      "rag_study_assistant/rag/retrieve.py",
+      "rag_study_assistant/rag/prompt_builder.py",
+      "rag_study_assistant/rag/ollama_client.py",
+      "rag_study_assistant/prompts/rag_4t_prompt.md",
+      "rag_study_assistant/documents/sample_course_notes.md",
+      "rag_study_assistant/requirements.txt",
+      "rag_study_assistant/validate_project.py"
+    ],
+    "constraints": [
+      "Use Python 3.9+",
+      "Implement Flask or FastAPI backend",
+      "Use pypdf for PDF extraction",
+      "Default to Ollama qwen3:8b model",
+      "Implement simple keyword/BM25 retrieval",
+      "Use 4T prompt template in LLM calls",
+      "Handle missing Ollama gracefully",
+      "Generate JSON index files",
+      "Include sample course notes document"
+    ]
+  },
+  "worker_b": {
+    "role": "Frontend and Documentation Developer",
+    "required_files": [
+      "rag_study_assistant/static/app.js",
+      "rag_study_assistant/static/styles.css",
+      "rag_study_assistant/templates/index.html",
+      "rag_study_assistant/README.md",
+      "rag_study_assistant/docs/architecture.md",
+      "rag_study_assistant/docs/runbook.md",
+      "rag_study_assistant/docs/limitations.md"
+    ],
+    "constraints": [
+      "Use vanilla HTML/CSS/JavaScript",
+      "Design clean, student-focused interface",
+      "Display answers with source citations",
+      "Implement question input and answer display",
+      "Use CSS/emoji/SVG for visuals (no binary assets)",
+      "Write complete setup guide in README",
+      "Document architecture and limitations",
+      "Create operational runbook",
+      "Ensure responsive design"
+    ]
+  },
+  "final_docs": [
+    "rag_study_assistant/README.md",
+    "rag_study_assistant/docs/architecture.md",
+    "rag_study_assistant/docs/runbook.md",
+    "rag_study_assistant/docs/limitations.md"
+  ],
+  "deployment_docs": [
+    "rag_study_assistant/docs/runbook.md",
+    "rag_study_assistant/docs/limitations.md"
+  ]
+}

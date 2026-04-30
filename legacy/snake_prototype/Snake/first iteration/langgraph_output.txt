@@ -1,0 +1,399 @@
+PLAN:
+# Snake Game Implementation Plan
+
+1. **Set up the HTML structure and canvas**
+   - Create a basic HTML document with a `<canvas>` element for the game board
+   - Add score display, game over message area, and restart button
+   - Include basic CSS for layout and styling
+
+2. **Initialize game variables and state**
+   - Define canvas context and dimensions
+   - Set up initial snake position (array of coordinates)
+   - Initialize food position, direction, score, and game running state
+   - Configure game speed/timing variables
+
+3. **Implement core game rendering functions**
+   - Create function to draw the snake segments
+   - Create function to draw the food item
+   - Create function to clear and redraw the entire game board
+   - Add score updating display
+
+4. **Build game logic and movement system**
+   - Implement keyboard input handling for direction changes
+   - Create snake movement algorithm (head advances, tail follows)
+   - Add collision detection (walls and self-collision)
+   - Implement food consumption and growth logic
+
+5. **Develop game flow control**
+   - Create main game loop with requestAnimationFrame or setInterval
+   - Implement game over conditions and state management
+   - Add pause/resume functionality
+   - Create reset/restart game function
+
+6. **Add enhancements and polish**
+   - Implement responsive design for different screen sizes
+   - Add sound effects or visual feedback for eating food/game over
+   - Include start screen and instructions
+   - Optimize performance and add smooth animations
+
+7. **Testing and debugging**
+   - Test all game mechanics (movement, collision, scoring)
+   - Verify cross-browser compatibility
+   - Debug edge cases and timing issues
+   - Optimize code for performance and readability
+
+CODE:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .game-container {
+            text-align: center;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+        
+        .score-container {
+            margin: 10px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin: 15px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .instructions {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Snake Game</h1>
+        <div class="score-container">Score: <span id="score">0</span></div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div class="controls">
+            <button id="startBtn">Start Game</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="restartBtn">Restart</button>
+        </div>
+        <div class="instructions">
+            Use arrow keys to control the snake. Eat the red food to grow and earn points!
+        </div>
+        <div id="gameOver" class="game-over">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="finalScore">0</span></p>
+            <button id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game elements
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const gameOverScreen = document.getElementById('gameOver');
+
+        // Game settings
+        const gridSize = 20;
+        const gridWidth = canvas.width / gridSize;
+        const gridHeight = canvas.height / gridSize;
+        const initialSpeed = 150; // milliseconds between moves
+
+        // Game state
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let nextDirection = 'right';
+        let score = 0;
+        let gameInterval;
+        let gameRunning = false;
+        let gamePaused = false;
+
+        // Initialize game
+        function initGame() {
+            // Initial snake position (centered)
+            snake = [
+                {x: 10, y: 10},
+                {x: 9, y: 10},
+                {x: 8, y: 10}
+            ];
+            
+            // Generate first food
+            generateFood();
+            
+            // Reset game state
+            direction = 'right';
+            nextDirection = 'right';
+            score = 0;
+            scoreDisplay.textContent = score;
+            
+            // Hide game over screen
+            gameOverScreen.style.display = 'none';
+        }
+
+        // Generate food at random position
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * gridWidth),
+                y: Math.floor(Math.random() * gridHeight)
+            };
+            
+            // Make sure food doesn't appear on snake
+            for (let segment of snake) {
+                if (segment.x === food.x && segment.y === food.y) {
+                    return generateFood();
+                }
+            }
+        }
+
+        // Draw game elements
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw snake
+            ctx.fillStyle = '#2196F3';
+            for (let segment of snake) {
+                ctx.fillRect(
+                    segment.x * gridSize, 
+                    segment.y * gridSize, 
+                    gridSize - 1, 
+                    gridSize - 1
+                );
+            }
+            
+            // Draw food
+            ctx.fillStyle = '#f44336';
+            ctx.fillRect(
+                food.x * gridSize, 
+                food.y * gridSize, 
+                gridSize - 1, 
+                gridSize - 1
+            );
+        }
+
+        // Move snake
+        function move() {
+            // Update direction
+            direction = nextDirection;
+            
+            // Create new head based on current direction
+            const head = {x: snake[0].x, y: snake[0].y};
+            
+            switch(direction) {
+                case 'up':
+                    head.y--;
+                    break;
+                case 'down':
+                    head.y++;
+                    break;
+                case 'left':
+                    head.x--;
+                    break;
+                case 'right':
+                    head.x++;
+                    break;
+            }
+            
+            // Check collision with walls
+            if (
+                head.x < 0 || 
+                head.x >= gridWidth || 
+                head.y < 0 || 
+                head.y >= gridHeight
+            ) {
+                gameOver();
+                return;
+            }
+            
+            // Check collision with self
+            for (let segment of snake) {
+                if (segment.x === head.x && segment.y === head.y) {
+                    gameOver();
+                    return;
+                }
+            }
+            
+            // Add new head to snake
+            snake.unshift(head);
+            
+            // Check if food is eaten
+            if (head.x === food.x && head.y === food.y) {
+                // Increase score
+                score += 10;
+                scoreDisplay.textContent = score;
+                
+                // Generate new food
+                generateFood();
+            } else {
+                // Remove tail if no food eaten
+                snake.pop();
+            }
+        }
+
+        // Main game loop
+        function gameLoop() {
+            if (gameRunning && !gamePaused) {
+                move();
+                draw();
+            }
+        }
+
+        // Start game
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                gamePaused = false;
+                gameInterval = setInterval(gameLoop, initialSpeed);
+            } else if (gamePaused) {
+                gamePaused = false;
+            }
+        }
+
+        // Pause game
+        function pauseGame() {
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? 'Resume' : 'Pause';
+        }
+
+        // Game over
+        function gameOver() {
+            clearInterval(gameInterval);
+            gameRunning = false;
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        // Restart game
+        function restartGame() {
+            clearInterval(gameInterval);
+            initGame();
+            draw();
+            gameRunning = false;
+            gamePaused = false;
+            pauseBtn.textContent = 'Pause';
+        }
+
+        // Handle keyboard input
+        function handleKeydown(e) {
+            // Prevent default behavior for arrow keys
+            if ([37, 38, 39, 40].includes(e.keyCode)) {
+                e.preventDefault();
+            }
+            
+            // Update nextDirection based on key pressed
+            switch(e.keyCode) {
+                case 38: // Up arrow
+                    if (direction !== 'down') nextDirection = 'up';
+                    break;
+                case 40: // Down arrow
+                    if (direction !== 'up') nextDirection = 'down';
+                    break;
+                case 37: // Left arrow
+                    if (direction !== 'right') nextDirection = 'left';
+                    break;
+                case 39: // Right arrow
+                    if (direction !== 'left') nextDirection = 'right';
+                    break;
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', pauseGame);
+        restartBtn.addEventListener('click', restartGame);
+        playAgainBtn.addEventListener('click', restartGame);
+        document.addEventListener('keydown', handleKeydown);
+
+        // Initialize and draw the initial state
+        initGame();
+        draw();
+    </script>
+</body>
+</html>
+```
+
+TEST REPORT:
+- Valid HTML structure (doctype, head, body): **pass**
+- <canvas> element present: **pass**
+- Game loop (setInterval or requestAnimationFrame): **pass** (uses setInterval)
+- Keyboard input handling (arrow keys or WASD): **pass** (handles arrow keys)
+- Collision detection (walls and self): **pass**
+- Score display and update: **pass**
+- Game-over state: **pass**
+- No obvious JavaScript errors: **pass**
+
+VERDICT: pass
+
+REVIEW:
+The implementation successfully covers all core requirements of a Snake game:
+
+- Proper HTML structure with canvas and UI elements  
+- Correct initialization of game state  
+- Functional rendering of snake and food  
+- Working movement mechanics with keyboard controls  
+- Wall and self-collision detection  
+- Score tracking and display  
+- Game loop using `setInterval`  
+- Game over and restart functionality  
+
+All tests in the report pass, and the code is reasonably well-structured and readable. There are some minor UX improvements that could be made (like adding visual feedback when food is eaten or the snake moves), but these are enhancements rather than functional flaws.
+
+VERDICT: good_enough
+
+FINAL VERDICT: good_enough
+ITERATIONS: 1

@@ -1,0 +1,154 @@
+codex resume 019d7675-ff46-7d42-879d-7de073109a33
+
+codex resume 019d7675-ff46-7d42-879d-7de073109a33
+
+Get-ChildItem -Path "C:\Program Files\JetBrains","$env:LOCALAPPDATA\JetBrains" -Recurse -Filter "mvn.cmd" -ErrorAction SilentlyContinue | Select-Object -First 20 -ExpandProperty FullName 
+
+& "C:\Program Files\JetBrains\IntelliJ IDEA 2024.3.1.1\plugins\maven\lib\maven3\bin\mvn.cmd" -version
+
+$env:PATH += ";C:\Program Files\JetBrains\IntelliJ IDEA 2024.3.1.1\plugins\maven\lib\maven3\bin" der efter mvn package / mvn package *> ..\maven_package_output.txt
+
+
+  & "C:\Program Files\JetBrains\IntelliJ IDEA 2024.3.1.1\plugins\maven\lib\maven3\bin\mvn.cmd" package
+
+
+cd "C:\Users\pf\Desktop\Skole\LLM for Developers\LLM\mandetory1\Mandatory-1 real\results\runs\20260411_191854\demo_project" mvn package *> ..\maven_package_output.txt
+
+Åben port:
+PS C:\Users\pf> $env:OLLAMA_HOST="127.0.0.1:11435"
+PS C:\Users\pf> ollama serve
+
+
+
+add task: 
+
+mvn exec:java "-Dexec.mainClass=tasktracker.Main" "-Dexec.args=add Write_tests" / ikke noget mellemrum i hvad der kommer efter add
+
+list tasks:
+
+mvn exec:java "-Dexec.mainClass=tasktracker.Main" "-Dexec.args=list"
+
+complete task:
+
+mvn exec:java "-Dexec.mainClass=tasktracker.Main" "-Dexec.args=complete 1" / 1 er id på task
+
+
+Start af nye prjects:
+
+ .\.venv\Scripts\python.exe .\prepare_workflow_inputs.py --run-id website-prep-demo-03
+
+.\.venv\Scripts\python.exe .\prepare_workflow_inputs.py --max-input-fix-iterations 3
+
+.\.venv\Scripts\python.exe .\prepare_workflow_inputs.py --max-input-fix-iterations 3 --run-id website-prep-demo-04
+
+
+$env:WORKFLOW_INPUT_DIR="test_projects\website_task"
+$env:RUN_ID="website-demo-01"
+.\.venv\Scripts\python.exe .\langgraph_workflow.py
+
+
+
+
+
+Potential new model for planning and rewiev: GLM-5.1 
+
+>> I was just contempleting if it would make sense to use you in my langgraph flow, and if so, what tasks i should assg
+... in you
+Thinking...
+The user is asking about integrating me (GLM) into their LangGraph workflow and what tasks would be suitable for
+me. This is a practical, thoughtful question about real-world AI application design.
+
+LangGraph is a framework for building stateful, multi-actor applications with LLMs - it's part of the LangChain
+ecosystem. It allows you to create graphs/nodes of different AI agents or steps that can work together, with state
+management and conditional routing.
+
+I should think about:
+
+1. **What are my actual strengths?** - Being honest about what I do well vs. where specialized models might be
+better
+2. **What tasks make sense in a LangGraph flow?** - Different nodes might handle different specialized tasks
+3. **Where I fit best in such architectures** - My value proposition vs. coding-specific models vs. other
+specialized tools
+
+My strengths for a LangGraph workflow:
+- General reasoning and planning
+- Multilingual capabilities (Chinese/English especially)
+- Broad knowledge synthesis
+- Structured output generation
+- Summarization and analysis
+- Breaking down complex problems
+
+Tasks where specialized models might be better:
+- Pure code generation (Qwen3-Coder or similar)
+- Very specific domain tasks where fine-tuned models exist
+
+Potential roles for me in a LangGraph flow:
+1. **Orchestrator/planner node** - Breaking down tasks and routing to specialized nodes
+2. **Reasoning/analysis node** - For non-coding analytical work
+3. **Multilingual node** - If the workflow involves Chinese/English content
+4. **Summarization/review node** - Synthesizing outputs from other nodes
+5. **Decision node** - Making routing decisions based on context
+
+I should be practical and honest, acknowledging that the best architecture depends on their specific use case.
+...done thinking.
+
+Good question — that's a practical way to think about it. Let me be straightforward about where I'd add value in a
+LangGraph flow.
+
+**Where I'd be a strong fit:**
+
+- **Orchestration/planning node** — Breaking down complex user requests into subtasks and routing them to
+specialized nodes
+- **Reasoning and analysis** — Evaluating outputs, making decisions, comparing options
+- **Multilingual tasks** — Especially Chinese ↔ English content
+- **Summarization/synthesis** — Condensing outputs from multiple nodes into coherent responses
+- **Structured data extraction** — Pulling structured info from unstructured text
+- **General Q&A / knowledge tasks** — Broad domain knowledge where specialized models aren't necessary
+
+**Where you'd want a different node:**
+
+- **Heavy code generation** → Qwen3-Coder or similar would likely outperform me
+- **Mathematical/symbolic reasoning** → Specialized models may be more reliable
+- **Highly specialized domains** → Fine-tuned models where available
+
+**Suggested architecture pattern:**
+
+```
+User Input → [GLM: Planner/Router] → Specialized Nodes (coder, etc.)
+                  ↓
+            [GLM: Synthesizer] → Final Output
+```
+
+This way I handle the "thinking" and coordination while specialized nodes handle execution-heavy tasks.
+
+What does your LangGraph flow look like currently? That would help me suggest more specific placements.
+
+>>> Think you have given me a good enough description of you. I will try and include you in the planning and reweiv part
+...  of my flow
+Thinking...
+The user has decided to include me in the planning and review parts of their LangGraph flow. This makes sense
+given what we discussed - using me for orchestration/planning and synthesis/review tasks while using more
+specialized models for execution-heavy tasks like code generation.
+
+This is a nice conclusion to our conversation. I should:
+1. Acknowledge their decision
+2. Offer any final helpful thoughts about this architecture
+3. Be available if they need further assistance
+4. Keep it concise since they seem satisfied with the information
+
+The planning and review roles are indeed good fits for my strengths - requiring reasoning, evaluation, and
+synthesis rather than specialized execution.
+...done thinking.
+
+Sounds like a solid plan! Planning and review are good fits for my strengths — reasoning through problems,
+evaluating outputs, and making judgment calls.
+
+A couple of quick tips:
+
+- **For the planning node**, giving me clear output schemas (e.g., "return a list of subtasks with assigned model
+names") helps keep the graph predictable
+- **For the review node**, defining specific evaluation criteria I should check against will make my feedback more
+actionable and consistent
+
+Feel free to reach out if you run into issues or want to refine the prompts once you're building it. Good luck
+with the flow!

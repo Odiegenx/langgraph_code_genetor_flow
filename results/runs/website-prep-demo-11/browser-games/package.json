@@ -1,0 +1,12 @@
+{
+  "name": "browser-games",
+  "version": "1.0.0",
+  "description": "A collection of classic browser-based games.",
+  "scripts": {
+    "validate": "node validate_site.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^22.0.0"
+  },
+  "private": true
+}

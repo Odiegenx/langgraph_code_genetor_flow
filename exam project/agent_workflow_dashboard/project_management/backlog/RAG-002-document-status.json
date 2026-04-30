@@ -1,0 +1,19 @@
+{
+  "id": "RAG-002",
+  "title": "Show document index status",
+  "priority": "medium",
+  "status": "backlog",
+  "description": "Show whether the RAG index exists and when it was last updated.",
+  "acceptance_criteria": [
+    "The UI can show if index/chunks.json exists.",
+    "The UI can show the number of indexed chunks.",
+    "The UI can show a useful message when no index exists."
+  ],
+  "affected_files": [
+    "app.py",
+    "templates/index.html",
+    "static/app.js"
+  ],
+  "validation_command": "..\\..\\..\\.venv\\Scripts\\python.exe validate_project.py",
+  "branch_name": "feature/RAG-002-document-status"
+}

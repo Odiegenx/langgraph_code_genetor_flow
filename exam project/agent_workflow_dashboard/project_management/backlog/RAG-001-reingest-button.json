@@ -1,0 +1,19 @@
+{
+  "id": "RAG-001",
+  "title": "Add re-ingest button",
+  "priority": "high",
+  "status": "backlog",
+  "description": "Add a UI button to the RAG Study Assistant that calls the existing /api/ingest endpoint.",
+  "acceptance_criteria": [
+    "The user can click a button in the browser to re-ingest documents.",
+    "The UI shows success or failure status after ingestion.",
+    "The existing ask-question flow still works.",
+    "The change is documented in the user guide if needed."
+  ],
+  "affected_files": [
+    "templates/index.html",
+    "static/app.js"
+  ],
+  "validation_command": "..\\..\\..\\.venv\\Scripts\\python.exe validate_project.py",
+  "branch_name": "feature/RAG-001-reingest-button"
+}

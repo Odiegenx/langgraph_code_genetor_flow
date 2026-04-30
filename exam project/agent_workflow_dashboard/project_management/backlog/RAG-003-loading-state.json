@@ -1,0 +1,18 @@
+{
+  "id": "RAG-003",
+  "title": "Improve loading state",
+  "priority": "medium",
+  "status": "backlog",
+  "description": "Make it clear when the app is waiting for the model to answer.",
+  "acceptance_criteria": [
+    "The ask button is disabled while a request is running.",
+    "The UI shows a visible loading message.",
+    "The UI recovers cleanly after errors or timeouts."
+  ],
+  "affected_files": [
+    "templates/index.html",
+    "static/app.js"
+  ],
+  "validation_command": "..\\..\\..\\.venv\\Scripts\\python.exe validate_project.py",
+  "branch_name": "feature/RAG-003-loading-state"
+}

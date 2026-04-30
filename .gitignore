@@ -1,0 +1,49 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# Node / browser validation dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Generated runtime output
+*.log
+*.tmp
+*.temp
+site_validation_output.txt
+fixer_iteration_*_parse_error.txt
+worker_*_invalid_json_response.txt
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Local scratch files
+recent flow run.txt
