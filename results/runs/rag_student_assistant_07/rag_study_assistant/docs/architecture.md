@@ -1,99 +1,134 @@
+# Local RAG Study Assistant - Architecture
+
+## System Overview
+
+The Local RAG Study Assistant is an offline-capable Retrieval-Augmented Generation system tailored for educational use. It enables students to ask questions about their course materials and receive AI-generated answers backed by source citations.
+
+All components operate locally—no external APIs are used except for communicating with a local Ollama instance.
+
+## Component Decomposition
+
+### 1. Document Processing Layer (`rag/ingest.py`)
+
+Responsible for converting raw documents into structured data suitable for retrieval.
+
+**Functions**:
+- Detects and parses `.txt`, `.md`, and `.pdf` files
+- Normalizes extracted text
+- Splits text into overlapping chunks (default: 500 tokens with 50-token overlap)
+- Preserves metadata such as filename and page number
+- Stores processed chunks in `index/chunks.json`
+
+### 2. Retrieval Engine (`rag/retrieve.py`)
+
+Performs keyword-based search across ingested documents.
+
+**Functions**:
+- Tokenizes and preprocesses user queries
+- Implements BM25 scoring (falls back to TF-IDF if BM25 unavailable)
+- Selects top-k most relevant chunks
+- Extracts contextual snippets around matched keywords
+
+### 3. Prompt Engineering Layer (`rag/prompt_builder.py`)
+
+Constructs prompts following the 4T framework before sending them to the LLM.
+
+**Functions**:
+- Loads `prompts/rag_4t_prompt.md`
+- Inserts retrieved context and user question into the template
+- Ensures prompt stays within token limits
+
+### 4. LLM Integration Layer (`rag/ollama_client.py`)
+
+Handles communication with the local Ollama service.
+
+**Functions**:
+- Sends constructed prompts to `http://localhost:11434/api/chat`
+- Parses responses from the model
+- Handles connection errors gracefully
+
+### 5. Web Application Layer (`app.py`)
+
+Provides a RESTful API and serves the frontend interface.
+
+**Endpoints**:
+- `GET /` – Serve the main HTML page
+- `POST /ask` – Accept user questions and return answers
+- `POST /ingest` – Trigger reprocessing of documents
+- `GET /status` – Check system health
+
+### 6. Frontend Interface (`static/`, `templates/`)
+
+Delivers a clean, single-page web interface for interacting with the system.
+
+**Components**:
+- Input area for entering questions
+- Display area for answers and citations
+- Status indicators for Ollama connectivity and indexing progress
+
+## Data Flow
+
+```
+[Documents] → Ingestion → Index (chunks.json)
+                             ↑
+[User Query] → Retrieval → Prompt Builder → Ollama → Answer + Citations
+```
+
 ## Operational Constraints
 
-### 1. **Local-Only Constraint**
-- No external API calls beyond localhost Ollama
-- All processing occurs on user machine
-- Index files stored locally in JSON format
+### Local-Only Operation
 
-### 2. **Simplicity Priority**
-- BM25 retrieval instead of vector embeddings
-- JSON file storage instead of databases
-- Vanilla web technologies instead of frameworks
-- Clear error messages over complex recovery
+All computation happens on the user’s device. No cloud services or third-party APIs are contacted during normal operation.
 
-### 3. **Resource Management**
-- Fixed chunk sizes to manage memory
-- Configurable retrieval depth (k=3)
-- Model selection via environment variable
-- Graceful handling of large documents
+### Simplicity First
 
-### 4. **User Experience Guarantees**
-- Always display source citations
-- Clear indication when Ollama unavailable
-- Progress indicators during processing
-- Responsive design for study sessions
+Designed to be understandable and maintainable. Avoids complex algorithms like neural embeddings in favor of simpler keyword matching.
+
+### Resource Management
+
+Processes documents in fixed-size chunks to manage memory usage. Limits the number of retrieved results to prevent overwhelming the LLM.
+
+### User Experience Guarantees
+
+Always shows where each piece of information came from. Clearly indicates when the system cannot function due to missing dependencies (e.g., Ollama not running). Provides visual feedback during long operations.
 
 ## Integration Points
 
-### 1. **Document → Index**
-- Automatic format detection
-- Chunk ID generation for traceability
-- Metadata preservation for citations
+Each component communicates through well-defined interfaces:
 
-### 2. **Query → Answer**
-- Question preprocessing (lowercase, stopwords)
-- Retrieval with confidence scores
-- Prompt construction with context
-- LLM response with citation mapping
-
-### 3. **UI → Backend**
-- RESTful API with JSON payloads
-- Error response standardization
-- CORS configuration for local development
-- WebSocket readiness for streaming
+- **Ingestion ↔ Index**: JSON serialization/deserialization
+- **Retrieval ↔ Prompt Builder**: Ranked list of text chunks
+- **Prompt Builder ↔ Ollama Client**: Well-formed prompt strings
+- **Ollama Client ↔ Web App**: Structured JSON responses
+- **Web App ↔ Frontend**: RESTful HTTP endpoints
 
 ## Failure Modes & Mitigations
 
-### 1. **Ollama Unavailable**
-- Clear UI message with setup instructions
-- Fallback to keyword matching only
-- Citation display without LLM answer
-
-### 2. **Empty Document Folder**
-- Sample document provided
-- Clear ingestion instructions
-- Status indicator showing empty state
-
-### 3. **Unsupported File Format**
-- Skip unsupported files with warning
-- Continue processing supported formats
-- Log format errors for user review
-
-### 4. **Large Document Processing**
-- Progress indicators during ingestion
-- Configurable chunk sizes
-- Memory usage warnings
+| Failure Mode | Detection | Mitigation |
+|--------------|-----------|------------|
+| Ollama Not Running | Connection refused at startup | Show clear error message in UI |
+| Empty Documents Folder | No files found during ingestion | Provide sample document and instructions |
+| Unsupported File Type | Parser raises exception | Skip file and log warning |
+| Large Document Hang | Long processing time observed | Show progress indicator |
 
 ## Configuration Management
 
-### 1. **Environment Variables**
-- `OLLAMA_MODEL`: Default `qwen3:8b`
-- `CHUNK_SIZE`: Default 500 tokens
-- `CHUNK_OVERLAP`: Default 50 tokens
-- `RETRIEVAL_K`: Default 3 chunks
+Configuration options can be adjusted via environment variables:
 
-### 2. **File-Based Configuration**
-- Index location: `index/chunks.json`
-- Document location: `documents/`
-- Prompt template: `prompts/rag_4t_prompt.md`
+- `OLLAMA_MODEL`: Sets which model to use (default: `qwen3:8b`)
+- `CHUNK_SIZE`: Controls how much text is included per chunk
+- `CHUNK_OVERLAP`: Prevents splitting important phrases across chunks
+- `RETRIEVAL_K`: Adjusts how many chunks influence the final answer
+
+Defaults are chosen to balance accuracy, speed, and resource consumption.
 
 ## Development Constraints
 
-### 1. **No External Dependencies**
-- All code must be source-available
-- No binary assets in repository
-- SVG/CSS/emoji for visual elements
+To ensure ease of setup and transparency:
 
-### 2. **Documentation Requirements**
-- Complete setup guide in README
-- Architecture documentation
-- Operational runbook
-- Limitations disclosure
+- All code must be open-source and inspectable
+- No compiled binaries or proprietary assets allowed
+- Visual elements should rely on CSS, SVG, or emoji rather than image files
+- Documentation must accompany every major feature
 
-### 3. **Validation Enforcement**
-- Structure validation script
-- 4T prompt template verification
-- Import error checking
-- File existence validation
-
-This architecture prioritizes simplicity, explainability, and local operation while providing a complete RAG study assistant experience for exam preparation.
+This architecture ensures the system remains lightweight, secure, and fully controllable by the end-user.

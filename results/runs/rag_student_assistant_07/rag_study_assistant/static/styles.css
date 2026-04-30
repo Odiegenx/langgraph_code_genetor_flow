@@ -69,6 +69,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .status-indicator {
   display: flex;
   align-items: center;
