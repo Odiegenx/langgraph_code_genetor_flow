@@ -1,7 +1,0 @@
-Hard you can kick, software you can only curse at.
-
-Introduction:
-
-Why do we test - because software fails.
-
-
