@@ -1,0 +1,32 @@
+part of integration testing
+
+its importen because between 60 and 80% of all internet traffic is API calls
+subcutaneous testing (under the skin testing, explain further)
+
+
+potential API errors:
+	version changes
+	endpoint name or paramenters changes.
+	permissions changes(user that can only read, should not be able to write)
+	server issues
+	Network issues
+	
+elements to test:
+	Data format validation, to prevent fraudulent client requests.
+	Authentocation, usually with a token
+	permissions, since there might be more than one authorisation level
+	Proper use of HTTP status codes besides 200 OK and 404 Not Found!
+		201 created
+		400 bad request (malformed request)
+		401 Unauthorized (well formed request, but the client does ot have permission)
+		500 internal server error (the api has a bug)
+		204 correct deletion
+
+further tests:
+	how do a GET request behave when they return no data
+	POST, PUT and PATCH requests:
+		extremely long text values
+		Unsanitised strings
+	whether put requests should require all values to be filled
+	how do delete requests behave
+ 
