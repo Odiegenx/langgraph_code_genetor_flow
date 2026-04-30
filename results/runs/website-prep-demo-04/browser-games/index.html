@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Games Hub</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- Landing Page -->
+  <div id="landing-page">
+    <h1>Browser Games Hub</h1>
+    <div class="game-cards">
+      <button class="game-card" data-game="snake">Snake</button>
+      <button class="game-card" data-game="tictactoe">Tic Tac Toe</button>
+      <button class="game-card" data-game="memory">Memory Match</button>
+    </div>
+  </div>
+
+  <!-- Game Containers -->
+  <div id="snake-container" class="game-container hidden"></div>
+  <div id="tictactoe-container" class="game-container hidden"></div>
+  <div id="memory-container" class="game-container hidden"></div>
+
+  <!-- Back Button -->
+  <button id="back-button" class="hidden">Back to Hub</button>
+
+  <!-- Scripts -->
+  <script src="js/snake.js"></script>
+  <script src="js/tictactoe.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -6,7 +6,7 @@ import math
 
 INDEX_FILE = "index/chunks.json"
 TOP_K = 3
-DEFAULT_CONTEXT_WINDOW = 300
+DEFAULT_CONTEXT_WINDOW = 200
 
 
 def load_index():

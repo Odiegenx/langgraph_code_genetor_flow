@@ -1,0 +1,55 @@
+{
+  "project_name": "Browser Games",
+  "project_dir": "browser-games",
+  "validation_command": ["node", "validate_site.js"],
+  "validation_output": "site_validation_output.txt",
+  "review_output": "workflow_review.md",
+  "worker_a": {
+    "role": "Frontend Developer - Snake & Memory Games",
+    "required_files": [
+      "browser-games/index.html",
+      "browser-games/styles.css",
+      "browser-games/script.js",
+      "browser-games/snake.html",
+      "browser-games/snake.css",
+      "browser-games/snake.js",
+      "browser-games/memory.html",
+      "browser-games/memory.css",
+      "browser-games/memory.js",
+      "browser-games/README.md",
+      "browser-games/docs/runbook.md"
+    ],
+    "constraints": [
+      "No external image/audio/video files",
+      "Snake: arrow keys must not scroll page",
+      "Snake: three fruit types (apple, pear, orange)",
+      "Memory: two picture sets (fruits/animals)",
+      "Memory: localStorage for high scores",
+      "Use CSS/emoji/SVG/canvas for visuals"
+    ]
+  },
+  "worker_b": {
+    "role": "Frontend Developer - Tic Tac Toe & Validation",
+    "required_files": [
+      "browser-games/tictactoe.html",
+      "browser-games/tictactoe.css",
+      "browser-games/tictactoe.js",
+      "browser-games/validate_site.js",
+      "browser-games/docs/deployment_checklist.md"
+    ],
+    "constraints": [
+      "No external image/audio/video files",
+      "Tic Tac Toe: three AI difficulty levels",
+      "Tic Tac Toe: tutorial with static+interactive parts",
+      "Validation: check file structure and patterns",
+      "Use CSS/emoji/SVG/canvas for visuals"
+    ]
+  },
+  "final_docs": [
+    "README.md",
+    "docs/runbook.md"
+  ],
+  "deployment_docs": [
+    "docs/deployment_checklist.md"
+  ]
+}

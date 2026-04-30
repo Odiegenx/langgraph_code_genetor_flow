@@ -1,0 +1,48 @@
+{
+  "project_name": "Browser Games Collection",
+  "project_dir": "browser-games",
+  "validation_command": ["node", "validate_site.js"],
+  "validation_output": "site_validation_output.txt",
+  "review_output": "workflow_review.md",
+  "worker_a": {
+    "role": "Snake Game & Validation Developer",
+    "required_files": [
+      "browser-games/snake.html",
+      "browser-games/snake.js",
+      "browser-games/snake.css",
+      "browser-games/validate_site.js"
+    ],
+    "constraints": [
+      "Use canvas for snake rendering",
+      "Prevent arrow key scrolling during gameplay",
+      "Three fruit types (apple, pear, orange) as emoji/SVG",
+      "Validation script must check all 11 project files"
+    ]
+  },
+  "worker_b": {
+    "role": "Tic Tac Toe, Memory & UI Developer",
+    "required_files": [
+      "browser-games/index.html",
+      "browser-games/styles.css",
+      "browser-games/tictactoe.html",
+      "browser-games/tictactoe.js",
+      "browser-games/tictactoe.css",
+      "browser-games/memory.html",
+      "browser-games/memory.js",
+      "browser-games/memory.css"
+    ],
+    "constraints": [
+      "Three AI difficulty levels with clear algorithms",
+      "Tutorial with static text + interactive examples",
+      "Memory game: two emoji sets, three grid sizes",
+      "High scores in localStorage per grid size"
+    ]
+  },
+  "final_docs": [
+    "README.md",
+    "docs/runbook.md"
+  ],
+  "deployment_docs": [
+    "docs/deployment_checklist.md"
+  ]
+}

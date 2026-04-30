@@ -1,0 +1,65 @@
+:root {
+  --primary-color: #ffcc00;
+  --secondary-color: #ff3333;
+  --background-color: #1a1a2e;
+  --text-color: #e6e6e6;
+  --accent-color: #00cc99;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1, h2, h3 {
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  display: inline-block;
+  margin: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--accent-color);
+  background-color: transparent;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+a:hover {
+  background-color: var(--accent-color);
+  color: var(--background-color);
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background-color: var(--secondary-color);
+  color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #ff1a1a;
+}
