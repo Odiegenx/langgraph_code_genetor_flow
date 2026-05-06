@@ -13,7 +13,20 @@
     </header>
 
     <main>
+        <section id="upload-section">
+            <h2>📁 Upload Documents</h2>
+            <div id="drop-zone" class="drop-zone">
+                <div class="drop-zone-content">
+                    <p>📄 Drag and drop files here or <span class="upload-link">click to browse</span></p>
+                    <p class="file-types">Supported: PDF, TXT, DOCX</p>
+                </div>
+                <input type="file" id="file-input" multiple accept=".pdf,.txt,.docx" style="display: none;">
+            </div>
+            <div id="upload-status" class="hidden"></div>
+        </section>
+
         <section id="input-section">
+            <h2>❓ Ask Questions</h2>
             <textarea id="question-input" placeholder="Enter your question here..."></textarea>
             <button id="submit-btn">Submit Question</button>
             <button id="ingest-btn" type="button">Re-ingest documents</button>
