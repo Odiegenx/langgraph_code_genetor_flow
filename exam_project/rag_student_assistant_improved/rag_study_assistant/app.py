@@ -19,17 +19,15 @@ def allowed_file(filename):
 @app.route("/")
 def index():
     return render_template("index.html")
-
 @app.route("/ask", methods=["POST"])
 def ask_question():
+    try:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({"error": "Request body must be a valid JSON object"}), 400
 
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict):
-        return jsonify({"error": "Request body must be a valid JSON object"}), 400
-
-    question = data.get("question", "").strip()
-    selected_model = data.get("model", "").strip() or None
-
+        question = data.get("question", "").strip()
+        selected_model = data.get("model", "").strip() or None
 
         question = data.get("question", "")
         if not isinstance(question, str):
@@ -96,9 +94,10 @@ def ask_question():
             "citations": retrieved,
             "model": selected_model or get_model()
         }), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 @app.route("/models", methods=["GET"])
 def models():
     try:
@@ -176,5 +175,5 @@ def status_check():
     }), 200
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "5000"))
+    port = int(os.getenv("PORT", "5500"))
     app.run(host="0.0.0.0", port=port, debug=True)
