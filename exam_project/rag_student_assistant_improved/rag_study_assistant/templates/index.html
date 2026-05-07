@@ -13,29 +13,38 @@
     </header>
 
     <main>
-        <section id="input-section">
-            <label for="model-select">Model</label>
-            <select id="model-select">
-                <option value="">Loading models...</option>
-            </select>
-            <label for="answer-mode-select">Answer mode</label>
-            <select id="answer-mode-select">
-                <option value="rag">RAG only - answer from documents</option>
-                <option value="model">Model only - no document sources</option>
-                <option value="hybrid">Hybrid - documents first, then model knowledge</option>
-            </select>
-            <textarea id="question-input" placeholder="Enter your question here..."></textarea>
-            <button id="submit-btn">Submit Question</button>
-            <button id="clear-chat-btn" type="button">Clear conversation</button>
-            <button id="ingest-btn" type="button">Re-ingest documents</button>
-            <div id="loading" class="hidden">⏳ Processing your question...</div>
-        </section>
-
         <section id="answer-section" class="hidden">
             <h2>Conversation</h2>
             <div id="conversation-list"></div>
             <h3>Sources</h3>
             <ul id="sources-list"></ul>
+        </section>
+
+        <section id="input-section">
+            <textarea id="question-input" placeholder="Enter your question here..."></textarea>
+
+            <button id="submit-btn">Submit Question</button>
+            <button id="clear-chat-btn" type="button">Clear conversation</button>
+            <button id="ingest-btn" type="button">Re-ingest documents</button>
+
+            <div class="control-grid">
+                <div>
+                    <label for="model-select">Model</label>
+                    <select id="model-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="answer-mode-select">Answer mode</label>
+                    <select id="answer-mode-select">
+                        <option value="rag">RAG only - answer from documents</option>
+                        <option value="model">Model only - no document sources</option>
+                        <option value="hybrid">Hybrid - documents first, then model knowledge</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">⏳ Processing your question...</div>
         </section>
 
         <section id="status-section">
