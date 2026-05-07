@@ -1,6 +1,7 @@
 import os
 import sys
 import importlib.util
+import re
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = "site_validation_output.txt"
@@ -22,10 +23,10 @@ REQUIRED_FILES = [
 ]
 
 REQUIRED_PROMPT_SECTIONS = [
-    "Traits:",
-    "Task:",
-    "Tone:",
-    "Target:"
+    "traits",
+    "task",
+    "tone",
+    "target"
 ]
 
 def check_directories():
@@ -46,10 +47,11 @@ def check_prompt_sections():
     prompt_path = os.path.join(PROJECT_ROOT, "prompts", "rag_4t_prompt.md")
     if not os.path.exists(prompt_path):
         return False
-    with open(prompt_path, 'r') as pf:
+    with open(prompt_path, 'r', encoding="utf-8") as pf:
         content = pf.read()
         for section in REQUIRED_PROMPT_SECTIONS:
-            if section not in content:
+            pattern = rf"^\s*#*\s*{section}\s*:?\s*$"
+            if not re.search(pattern, content, re.IGNORECASE | re.MULTILINE):
                 return False
     return True
 
@@ -66,7 +68,7 @@ def check_imports():
     return missing_modules
 
 def write_output(results):
-    with open(OUTPUT_FILE, 'w') as f:
+    with open(OUTPUT_FILE, 'w', encoding="utf-8") as f:
         f.write("Project Validation Report\n")
         f.write("========================\n\n")
 
@@ -105,3 +107,5 @@ if __name__ == "__main__":
     write_output(results)
 
     print(f"Validation complete. Results written to {OUTPUT_FILE}")
+    has_errors = bool(results["dirs"] or results["files"] or results["imports"] or not results["prompt_valid"])
+    raise SystemExit(1 if has_errors else 0)

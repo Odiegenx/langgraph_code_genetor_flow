@@ -4,7 +4,7 @@ import json
 from rag.ingest import process_documents
 from rag.retrieve import score_chunks, load_index
 from rag.prompt_builder import PromptBuilder
-from rag.ollama_client import ask_ollama
+from rag.ollama_client import ask_ollama, get_model, list_models
 
 app = Flask(__name__)
 
@@ -17,10 +17,14 @@ def index():
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
-    try:
-        data = request.get_json(silent=True)
-        if not isinstance(data, dict):
-            return jsonify({"error": "Request body must be a valid JSON object"}), 400
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be a valid JSON object"}), 400
+
+    question = data.get("question", "").strip()
+    selected_model = data.get("model", "").strip() or None
+
 
         question = data.get("question", "")
         if not isinstance(question, str):
@@ -71,7 +75,7 @@ def ask_question():
 
         prompt_builder = PromptBuilder()
         prompt = prompt_builder.build_prompt(context_chunks, question)
-        answer = ask_ollama(prompt)
+        answer = ask_ollama(prompt, model=selected_model)
 
         retrieved = [
             {
@@ -84,10 +88,25 @@ def ask_question():
 
         return jsonify({
             "answer": answer[0] if isinstance(answer, tuple) else answer,
-            "citations": retrieved
+            "citations": retrieved,
+            "model": selected_model or get_model()
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/models", methods=["GET"])
+def models():
+    try:
+        return jsonify({
+            "default_model": get_model(),
+            "models": list_models()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "default_model": get_model(),
+            "models": [get_model()],
+            "error": str(e)
+        }), 200
 
 @app.route("/ingest", methods=["POST"])
 def ingest_documents():
