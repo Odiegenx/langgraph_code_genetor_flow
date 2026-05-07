@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const questionInput = document.getElementById('question-input');
+    const modelSelect = document.getElementById('model-select');
     const submitButton = document.getElementById('submit-btn');
     const ingestButton = document.getElementById('ingest-btn');
     const answerSection = document.getElementById('answer-section');
@@ -9,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
 
+    updateModels();
     updateStatus();
 
     submitButton.addEventListener('click', async () => {
@@ -24,13 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+                body: JSON.stringify({
+                    question,
+                    model: modelSelect.value
+                })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                answerContent.textContent = data.answer || 'No answer returned.';
+                answerContent.textContent = data.model
+                    ? `Model: ${data.model}\n\n${data.answer || 'No answer returned.'}`
+                    : data.answer || 'No answer returned.';
 
                 if (data.citations && data.citations.length > 0) {
                     sourcesList.innerHTML = data.citations.map(cite =>
@@ -85,11 +92,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function updateModels() {
+        try {
+            const response = await fetch('/models');
+            const data = await response.json();
+            const models = data.models && data.models.length > 0
+                ? data.models
+                : [data.default_model].filter(Boolean);
+
+            modelSelect.innerHTML = models.map(model =>
+                `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`
+            ).join('');
+
+            if (data.default_model && models.includes(data.default_model)) {
+                modelSelect.value = data.default_model;
+            }
+
+            if (data.error) {
+                ollamaStatus.textContent = `Could not load model list. Using ${data.default_model}.`;
+            }
+        } catch (err) {
+            modelSelect.innerHTML = '<option value="">Default model</option>';
+            ollamaStatus.textContent = `Could not load model list: ${err.message}`;
+        }
+    }
+
     function setLoading(isLoading, message = '⏳ Processing your question...') {
         loading.textContent = message;
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
         ingestButton.disabled = isLoading;
+        modelSelect.disabled = isLoading;
     }
 
     function escapeHtml(value) {

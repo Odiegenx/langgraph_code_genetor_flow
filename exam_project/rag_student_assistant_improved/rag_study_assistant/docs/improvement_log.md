@@ -68,6 +68,82 @@ Expected benefit:
 - Makes the MVP easier to run from a clean pull.
 - Makes the RAG flow easier to explain at exam.
 - Connects the UI behavior to the technical files behind it.
+
+### 2026-05-07: Added Ollama model selection
+
+Reason:
+
+The MVP used one hardcoded/default model. This made it harder to switch between local models and Ollama cloud models during demos, and made timeout or access issues harder to work around.
+
+Change:
+
+Updated:
+
+```text
+app.py
+rag/ollama_client.py
+templates/index.html
+static/app.js
+static/styles.css
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+The app now:
+
+- exposes `GET /models`
+- loads model names from Ollama `GET /api/tags`
+- shows the models in a browser dropdown
+- sends the selected model with `POST /ask`
+- falls back to the configured default model if the model list cannot be loaded
+- displays the model used with the answer
+
+Expected benefit:
+
+- Easier to compare local and cloud models.
+- Easier to recover from timeouts by selecting a faster model.
+- Better demo value because model choice is visible in the UI.
+
+### 2026-05-07: Added project-local virtual environment setup
+
+Reason:
+
+The app previously reused the repository root `.venv`, which was confusing when running the exam project from its own folder. Running `python app.py` could also hit the Windows Microsoft Store Python alias instead of the intended interpreter.
+
+Change:
+
+Created a project-local virtual environment:
+
+```text
+exam_project/rag_student_assistant_improved/rag_study_assistant/.venv
+```
+
+Installed dependencies from:
+
+```text
+requirements.txt
+```
+
+Updated:
+
+```text
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+The documented run command is now:
+
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
+Expected benefit:
+
+- The exam app can be treated as a self-contained project.
+- Setup commands are easier to understand.
+- Users avoid accidentally calling the wrong `python.exe`.
 docs/improvement_log.md
 ```
 

@@ -15,17 +15,18 @@
 1. Clone or extract the project into your working directory.
 2. Install dependencies:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   python -m venv .venv
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 3. Ensure Ollama is running on `http://localhost:11434`
 4. Run the ingestion process to index documents:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe rag\ingest.py
+   .\.venv\Scripts\python.exe rag\ingest.py
    ```
    You can also use the `Re-ingest documents` button in the browser UI.
 5. Start the web application:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe app.py
+   .\.venv\Scripts\python.exe app.py
    ```
 6. Open browser at `http://localhost:5000`
 
@@ -33,7 +34,7 @@
 
 Run structural and syntax validation:
 ```powershell
-..\..\..\.venv\Scripts\python.exe validate_project.py
+.\.venv\Scripts\python.exe validate_project.py
 ```
 
 This will check:
@@ -49,11 +50,13 @@ Output saved to: `site_validation_output.txt`
 ### Web Routes
 - `GET /` – Serve main UI page
 - `POST /ask` – Accept question input and return answer + citations
+- `GET /models` – Return available Ollama models for the UI dropdown
 - `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
 - `GET /status` – Report whether documents and index are available
 
 ### Configurable Settings
 - Default LLM model: Editable in `rag/ollama_client.py` or config/environment variable
+- Runtime model selection: available through the browser dropdown when Ollama responds to `/api/tags`
 - Chunk size and overlap: Defined in `rag/ingest.py`
 - Prompt path: Located at `prompts/rag_4t_prompt.md`
 
