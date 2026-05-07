@@ -49,6 +49,17 @@ textarea {
   font-size: 1rem;
 }
 
+select {
+  width: 100%;
+  max-width: 420px;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  background: white;
+}
+
 button {
   background-color: #3498db;
   color: white;
@@ -71,6 +82,19 @@ button:disabled {
 
 .hidden {
   display: none !important;
+}
+
+#rag-toggle {
+  margin: 0.75rem 0;
+  font-size: 0.95rem;
+}
+
+#rag-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: normal;
+  cursor: pointer;
 }
 
 .status-indicator {

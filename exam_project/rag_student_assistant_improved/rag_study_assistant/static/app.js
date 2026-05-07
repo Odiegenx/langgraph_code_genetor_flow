@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const questionInput = document.getElementById('question-input');
+    const modelSelect = document.getElementById('model-select');
     const submitButton = document.getElementById('submit-btn');
     const ingestButton = document.getElementById('ingest-btn');
     const answerSection = document.getElementById('answer-section');
@@ -14,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const uploadStatus = document.getElementById('upload-status');
 
+    const useRagCheckbox = document.getElementById('use-rag-checkbox');
+
+    updateModels();
     updateStatus();
     initializeUpload();
 
@@ -27,23 +31,38 @@ document.addEventListener('DOMContentLoaded', () => {
         sourcesList.innerHTML = '';
 
         try {
+            const useRag = useRagCheckbox.checked;
             const response = await fetch('/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+
+                body: JSON.stringify({
+                    question,
+                    model: modelSelect.value,
+                    use_rag: useRag
+                })
+
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                answerContent.textContent = data.answer || 'No answer returned.';
+                answerContent.textContent = data.model
+                    ? `Model: ${data.model}\n\n${data.answer || 'No answer returned.'}`
+                    : data.answer || 'No answer returned.';
 
-                if (data.citations && data.citations.length > 0) {
+                const sourcesHeading = document.querySelector('#answer-section h3');
+                if (useRag && data.citations && data.citations.length > 0) {
+                    sourcesHeading.classList.remove('hidden');
+                    sourcesList.classList.remove('hidden');
                     sourcesList.innerHTML = data.citations.map(cite =>
                         `<li><strong>${escapeHtml(cite.source || 'Unknown source')}</strong> ` +
                         `(Page: ${escapeHtml(String(cite.page || 'n/a'))})<br>` +
                         `${escapeHtml(cite.snippet || '')}</li>`
                     ).join('');
+                } else {
+                    sourcesHeading.classList.add('hidden');
+                    sourcesList.classList.add('hidden');
                 }
             } else {
                 answerContent.textContent = `Error: ${data.error || 'Failed to get response'}`;
@@ -91,11 +110,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function updateModels() {
+        try {
+            const response = await fetch('/models');
+            const data = await response.json();
+            const models = data.models && data.models.length > 0
+                ? data.models
+                : [data.default_model].filter(Boolean);
+
+            modelSelect.innerHTML = models.map(model =>
+                `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`
+            ).join('');
+
+            if (data.default_model && models.includes(data.default_model)) {
+                modelSelect.value = data.default_model;
+            }
+
+            if (data.error) {
+                ollamaStatus.textContent = `Could not load model list. Using ${data.default_model}.`;
+            }
+        } catch (err) {
+            modelSelect.innerHTML = '<option value="">Default model</option>';
+            ollamaStatus.textContent = `Could not load model list: ${err.message}`;
+        }
+    }
+
     function setLoading(isLoading, message = '⏳ Processing your question...') {
         loading.textContent = message;
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
         ingestButton.disabled = isLoading;
+        modelSelect.disabled = isLoading;
     }
 
     function escapeHtml(value) {
