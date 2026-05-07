@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 INDEX_FILE = "index/chunks.json"
 DOCUMENTS_DIR = "documents/"
+VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
 
 @app.route("/")
 def index():
@@ -23,37 +24,44 @@ def ask_question():
             return jsonify({"error": "Request body must be a valid JSON object"}), 400
 
         selected_model = data.get("model", "").strip() or None
+        answer_mode = data.get("answer_mode", "").strip().lower()
+        if not answer_mode:
+            raw_use_rag = data.get("use_rag", True)
+            answer_mode = "rag" if raw_use_rag is not False else "model"
 
         question = data.get("question", "")
         if not isinstance(question, str):
             return jsonify({"error": "Question must be a string"}), 400
         question = question.strip()
 
-        raw_use_rag = data.get("use_rag", True)
-        if isinstance(raw_use_rag, bool):
-            use_rag = raw_use_rag
-        elif isinstance(raw_use_rag, str):
-            normalized_use_rag = raw_use_rag.strip().lower()
-            if normalized_use_rag in ("true", "1", "yes", "on"):
-                use_rag = True
-            elif normalized_use_rag in ("false", "0", "no", "off"):
-                use_rag = False
-            else:
-                return jsonify({"error": "use_rag must be a boolean"}), 400
-        else:
-            return jsonify({"error": "use_rag must be a boolean"}), 400
+        if answer_mode not in VALID_ANSWER_MODES:
+            return jsonify({"error": "answer_mode must be one of: rag, model, hybrid"}), 400
+
+        conversation = data.get("conversation", [])
+        if not isinstance(conversation, list):
+            return jsonify({"error": "conversation must be a list"}), 400
+        safe_conversation = [
+            {
+                "role": message.get("role", "user"),
+                "content": str(message.get("content", ""))[:1200]
+            }
+            for message in conversation[-6:]
+            if isinstance(message, dict)
+        ]
 
         if not question:
             return jsonify({"error": "Question is required"}), 400
 
-        if not use_rag:
-            prompt_builder = PromptBuilder()
-            prompt = prompt_builder.build_direct_prompt(question)
+        prompt_builder = PromptBuilder()
+
+        if answer_mode == "model":
+            prompt = prompt_builder.build_direct_prompt(question, conversation=safe_conversation)
             answer = ask_ollama(prompt, model=selected_model)
             return jsonify({
                 "answer": answer[0] if isinstance(answer, tuple) else answer,
                 "citations": [],
                 "model": selected_model or get_model(),
+                "answer_mode": "model",
                 "use_rag": False
             }), 200
 
@@ -73,8 +81,18 @@ def ask_question():
             for chunk in sorted_chunks
         ]
 
-        prompt_builder = PromptBuilder()
-        prompt = prompt_builder.build_prompt(context_chunks, question)
+        if answer_mode == "hybrid":
+            prompt = prompt_builder.build_hybrid_prompt(
+                context_chunks,
+                question,
+                conversation=safe_conversation
+            )
+        else:
+            prompt = prompt_builder.build_prompt(
+                context_chunks,
+                question,
+                conversation=safe_conversation
+            )
         answer = ask_ollama(prompt, model=selected_model)
 
         retrieved = [
@@ -90,6 +108,7 @@ def ask_question():
             "answer": answer[0] if isinstance(answer, tuple) else answer,
             "citations": retrieved,
             "model": selected_model or get_model(),
+            "answer_mode": answer_mode,
             "use_rag": True
         }), 200
 

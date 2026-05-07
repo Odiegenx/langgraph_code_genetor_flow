@@ -10,6 +10,8 @@ The application first searches the user's local documents, selects relevant text
 
 The goal is to make answers grounded in the student's own notes and course files.
 
+The UI also keeps a short conversation history in the browser and sends recent messages with each question. This supports follow-up questions without adding a database.
+
 ## Application flow
 
 ```text
@@ -125,6 +127,41 @@ $env:OLLAMA_MODEL="qwen3:8b"
 
 If the model dropdown cannot load models, check that Ollama is running on `localhost:11434`.
 
+## Answer modes
+
+The app supports three answer modes.
+
+### RAG only
+
+Uses retrieved document chunks as the only source.
+
+Best for syllabus-grounded answers and reducing hallucinations. If the documents do not contain enough information, the model should say that the documents do not cover it.
+
+### Model only
+
+Does not use retrieved document chunks.
+
+Best for comparing against RAG answers or asking general questions. No sources are shown in this mode.
+
+### Hybrid
+
+Uses retrieved document chunks as the primary source, but allows the model to add general knowledge when helpful.
+
+The hybrid prompt requires the model to separate:
+
+```text
+Based on your documents:
+...
+
+Additional model knowledge:
+...
+
+Sources:
+...
+```
+
+The model must not invent citations. Only retrieved document chunks can be listed as sources.
+
 ## 4T prompt engineering
 
 The 4T prompt is stored here:
@@ -150,6 +187,8 @@ The app inserts:
 `{context}` is filled with retrieved chunks from local documents.
 
 `{question}` is filled with the user's question from the web UI.
+
+For hybrid mode, `rag/prompt_builder.py` adds guardrails that require document-based information and model knowledge to be separated.
 
 ## Validation
 

@@ -18,21 +18,22 @@
             <select id="model-select">
                 <option value="">Loading models...</option>
             </select>
+            <label for="answer-mode-select">Answer mode</label>
+            <select id="answer-mode-select">
+                <option value="rag">RAG only - answer from documents</option>
+                <option value="model">Model only - no document sources</option>
+                <option value="hybrid">Hybrid - documents first, then model knowledge</option>
+            </select>
             <textarea id="question-input" placeholder="Enter your question here..."></textarea>
-            <div id="rag-toggle">
-                <label>
-                    <input type="checkbox" id="use-rag-checkbox" checked>
-                    Use RAG (answer from your documents)
-                </label>
-            </div>
             <button id="submit-btn">Submit Question</button>
+            <button id="clear-chat-btn" type="button">Clear conversation</button>
             <button id="ingest-btn" type="button">Re-ingest documents</button>
             <div id="loading" class="hidden">⏳ Processing your question...</div>
         </section>
 
         <section id="answer-section" class="hidden">
-            <h2>Answer</h2>
-            <div id="answer-content"></div>
+            <h2>Conversation</h2>
+            <div id="conversation-list"></div>
             <h3>Sources</h3>
             <ul id="sources-list"></ul>
         </section>

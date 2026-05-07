@@ -54,6 +54,30 @@ Output saved to: `site_validation_output.txt`
 - `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
 - `GET /status` – Report whether documents and index are available
 
+### Answer modes
+
+`POST /ask` accepts:
+
+```json
+{
+  "question": "What is acceptance testing?",
+  "model": "qwen3:8b",
+  "answer_mode": "hybrid",
+  "conversation": [
+    {"role": "user", "content": "previous question"},
+    {"role": "assistant", "content": "previous answer"}
+  ]
+}
+```
+
+Allowed `answer_mode` values:
+
+- `rag`
+- `model`
+- `hybrid`
+
+`rag` and `hybrid` return document citations. `model` returns no citations.
+
 ### Configurable Settings
 - Default LLM model: Editable in `rag/ollama_client.py` or config/environment variable
 - Runtime model selection: available through the browser dropdown when Ollama responds to `/api/tags`

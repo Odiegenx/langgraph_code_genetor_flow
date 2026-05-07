@@ -1,15 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     const questionInput = document.getElementById('question-input');
     const modelSelect = document.getElementById('model-select');
+    const answerModeSelect = document.getElementById('answer-mode-select');
     const submitButton = document.getElementById('submit-btn');
+    const clearChatButton = document.getElementById('clear-chat-btn');
     const ingestButton = document.getElementById('ingest-btn');
     const answerSection = document.getElementById('answer-section');
-    const answerContent = document.getElementById('answer-content');
+    const conversationList = document.getElementById('conversation-list');
     const sourcesList = document.getElementById('sources-list');
     const loading = document.getElementById('loading');
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
-    const useRagCheckbox = document.getElementById('use-rag-checkbox');
+    const conversation = [];
 
     updateModels();
     updateStatus();
@@ -20,11 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setLoading(true);
         answerSection.classList.remove('hidden');
-        answerContent.textContent = '';
+        const answerMode = answerModeSelect.value;
+        appendMessage('user', question);
         sourcesList.innerHTML = '';
 
         try {
-            const useRag = useRagCheckbox.checked;
             const response = await fetch('/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -32,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     question,
                     model: modelSelect.value,
-                    use_rag: useRag
+                    answer_mode: answerMode,
+                    conversation: conversation.slice(-6)
                 })
 
             });
@@ -40,12 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                answerContent.textContent = data.model
-                    ? `Model: ${data.model}\n\n${data.answer || 'No answer returned.'}`
-                    : data.answer || 'No answer returned.';
+                appendMessage(
+                    'assistant',
+                    data.answer || 'No answer returned.',
+                    data.model,
+                    data.answer_mode || answerMode
+                );
+                questionInput.value = '';
 
                 const sourcesHeading = document.querySelector('#answer-section h3');
-                if (useRag && data.citations && data.citations.length > 0) {
+                if (data.citations && data.citations.length > 0) {
                     sourcesHeading.classList.remove('hidden');
                     sourcesList.classList.remove('hidden');
                     sourcesList.innerHTML = data.citations.map(cite =>
@@ -58,30 +65,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     sourcesList.classList.add('hidden');
                 }
             } else {
-                answerContent.textContent = `Error: ${data.error || 'Failed to get response'}`;
+                appendMessage('assistant', `Error: ${data.error || 'Failed to get response'}`);
             }
         } catch (err) {
-            answerContent.textContent = `Network error: ${err.message}`;
+            appendMessage('assistant', `Network error: ${err.message}`);
         } finally {
             setLoading(false);
             updateStatus();
         }
     });
 
+    clearChatButton.addEventListener('click', () => {
+        conversation.length = 0;
+        conversationList.innerHTML = '';
+        sourcesList.innerHTML = '';
+        answerSection.classList.add('hidden');
+    });
+
     ingestButton.addEventListener('click', async () => {
         setLoading(true, 'Re-ingesting documents...');
         answerSection.classList.remove('hidden');
-        answerContent.textContent = '';
         sourcesList.innerHTML = '';
 
         try {
             const response = await fetch('/ingest', { method: 'POST' });
             const data = await response.json();
-            answerContent.textContent = response.ok
+            appendMessage('assistant', response.ok
                 ? data.message || 'Ingestion completed.'
-                : `Ingestion failed: ${data.error || 'Unknown error'}`;
+                : `Ingestion failed: ${data.error || 'Unknown error'}`);
         } catch (err) {
-            answerContent.textContent = `Network error: ${err.message}`;
+            appendMessage('assistant', `Network error: ${err.message}`);
         } finally {
             setLoading(false);
             updateStatus();
@@ -132,8 +145,41 @@ document.addEventListener('DOMContentLoaded', () => {
         loading.textContent = message;
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
+        clearChatButton.disabled = isLoading;
         ingestButton.disabled = isLoading;
         modelSelect.disabled = isLoading;
+        answerModeSelect.disabled = isLoading;
+    }
+
+    function appendMessage(role, content, model = null, answerMode = null) {
+        conversation.push({ role, content });
+        answerSection.classList.remove('hidden');
+
+        const message = document.createElement('article');
+        message.className = `chat-message ${role}`;
+
+        const metaParts = [role === 'user' ? 'You' : 'Assistant'];
+        if (model) metaParts.push(`Model: ${model}`);
+        if (answerMode) metaParts.push(`Mode: ${formatAnswerMode(answerMode)}`);
+
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+        meta.textContent = metaParts.join(' | ');
+
+        const body = document.createElement('div');
+        body.className = 'message-body';
+        body.textContent = content;
+
+        message.appendChild(meta);
+        message.appendChild(body);
+        conversationList.appendChild(message);
+    }
+
+    function formatAnswerMode(value) {
+        if (value === 'rag') return 'RAG only';
+        if (value === 'model') return 'Model only';
+        if (value === 'hybrid') return 'Hybrid';
+        return value;
     }
 
     function escapeHtml(value) {

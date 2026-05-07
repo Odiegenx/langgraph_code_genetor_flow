@@ -124,6 +124,37 @@ button:disabled {
   white-space: pre-wrap;
 }
 
+#conversation-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.chat-message {
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #95a5a6;
+  background: #f8fafc;
+}
+
+.chat-message.user {
+  border-left-color: #3498db;
+}
+
+.chat-message.assistant {
+  border-left-color: #2ecc71;
+}
+
+.message-meta {
+  font-size: 0.85rem;
+  color: #5d6d7e;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.message-body {
+  white-space: pre-wrap;
+}
+
 .citations {
   margin-top: 1rem;
   padding-top: 1rem;

@@ -16,6 +16,8 @@ docs/user_guide.md
 - **Document Ingestion**: Supports `.txt`, `.md`, and `.pdf` files
 - **Keyword-Based Retrieval**: Uses BM25/TF-IDF for efficient chunk matching
 - **Source Citations**: Answers always include references to original documents
+- **Answer Modes**: Supports RAG only, model only, and hybrid answers
+- **Conversation UI**: Supports follow-up questions with short browser-side history
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 
 ## Prerequisites
@@ -65,6 +67,11 @@ docs/user_guide.md
 
 5. Ask questions about your course material and receive answers grounded in your documents.
 
+6. Choose answer mode:
+   - `RAG only`: answer from documents
+   - `Model only`: answer from model knowledge
+   - `Hybrid`: documents first, then clearly separated model knowledge
+
 ## Configuration
 
 Set environment variables to customize behavior:
@@ -111,6 +118,7 @@ For detailed information about this project, see:
 - [Runbook](docs/runbook.md)
 - [Limitations](docs/limitations.md)
 - [MVP fix log](docs/mvp_fix_log.md)
+- [Feature roadmap](docs/feature_roadmap.md)
 
 ## Troubleshooting
 
