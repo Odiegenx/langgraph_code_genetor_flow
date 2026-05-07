@@ -17,7 +17,10 @@ def index():
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
     question = data.get("question", "").strip()
     selected_model = data.get("model", "").strip() or None
 
