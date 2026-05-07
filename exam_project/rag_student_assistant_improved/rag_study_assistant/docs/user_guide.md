@@ -219,11 +219,30 @@ The file contains:
 
 The app uses recent persisted messages as short-term conversation context when building prompts.
 
+When the conversation becomes long, older messages are compressed into `summary`. The prompt then receives:
+
+```text
+conversation summary
+recent messages
+current question
+```
+
+The summary is only memory of the dialogue. It is not a document source and must not be cited as evidence.
+
+When summary is about to happen, the UI shows:
+
+```text
+Summarizing older conversation, then answering...
+```
+
+Summary uses a longer Ollama timeout than a normal answer because that request performs memory compression before the final answer is generated.
+
 Conversation endpoints:
 
 ```text
 GET /conversation
 POST /conversation/clear
+POST /conversation/summarize
 ```
 
 The `Clear conversation` button clears the persisted session file.

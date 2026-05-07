@@ -19,6 +19,7 @@ docs/user_guide.md
 - **Answer Modes**: Supports RAG only, model only, and hybrid answers
 - **Conversation UI**: Supports follow-up questions with short browser-side history
 - **Persistent Local Conversation**: Stores the current conversation in a local runtime JSON file
+- **Conversation Summary**: Compresses older messages when the conversation grows
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 
 ## Prerequisites

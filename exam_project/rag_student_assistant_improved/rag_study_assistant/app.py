@@ -14,6 +14,9 @@ DOCUMENTS_DIR = "documents/"
 CONVERSATION_DIR = "conversations"
 CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
 VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
+RECENT_MESSAGE_LIMIT = 6
+SUMMARY_TRIGGER_MESSAGES = 10
+SUMMARY_TIMEOUT_SECONDS = 240
 
 def utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -83,6 +86,66 @@ def recent_prompt_messages(conversation, limit=6):
         if isinstance(message, dict)
     ]
 
+def format_messages_for_summary(messages):
+    lines = []
+    for message in messages:
+        role = str(message.get("role", "user")).title()
+        content = str(message.get("content", "")).strip()
+        if content:
+            lines.append(f"{role}: {content}")
+    return "\n".join(lines)
+
+def build_summary_prompt(existing_summary, older_messages):
+    return (
+        "Summarize this conversation for future context in a local study assistant.\n\n"
+        "Preserve:\n"
+        "- the user's learning goals\n"
+        "- important facts already discussed\n"
+        "- unresolved questions\n"
+        "- decisions or preferences that matter for future answers\n\n"
+        "Rules:\n"
+        "- Do not add new facts.\n"
+        "- Do not invent sources.\n"
+        "- Keep it concise.\n"
+        "- This summary is memory only, not evidence.\n\n"
+        "Existing summary:\n"
+        f"{existing_summary or 'No existing summary.'}\n\n"
+        "Messages to merge into the summary:\n"
+        f"{format_messages_for_summary(older_messages)}\n\n"
+        "Updated summary:"
+    )
+
+def summarize_if_needed(conversation, model=None):
+    messages = conversation.get("messages", [])
+    if len(messages) <= SUMMARY_TRIGGER_MESSAGES:
+        return conversation
+
+    older_messages = messages[:-RECENT_MESSAGE_LIMIT]
+    recent_messages = messages[-RECENT_MESSAGE_LIMIT:]
+    if not older_messages:
+        return conversation
+
+    summary_prompt = build_summary_prompt(
+        conversation.get("summary", ""),
+        older_messages
+    )
+    summary_response = ask_ollama(
+        summary_prompt,
+        model=model,
+        timeout=SUMMARY_TIMEOUT_SECONDS
+    )
+    summary_text = summary_response[0] if isinstance(summary_response, tuple) else summary_response
+
+    if summary_text.startswith("[Error]"):
+        return conversation
+
+    summarized_conversation = {
+        "summary": summary_text.strip(),
+        "messages": recent_messages
+    }
+    save_conversation(summarized_conversation)
+    return summarized_conversation
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -111,8 +174,15 @@ def ask_question():
         if not question:
             return jsonify({"error": "Question is required"}), 400
 
-        persisted_conversation = load_conversation()
-        safe_conversation = recent_prompt_messages(persisted_conversation)
+        persisted_conversation = summarize_if_needed(
+            load_conversation(),
+            model=selected_model
+        )
+        safe_conversation = recent_prompt_messages(
+            persisted_conversation,
+            limit=RECENT_MESSAGE_LIMIT
+        )
+        conversation_summary = persisted_conversation.get("summary", "")
         prompt_builder = PromptBuilder()
         append_conversation_message(
             "user",
@@ -122,7 +192,11 @@ def ask_question():
         )
 
         if answer_mode == "model":
-            prompt = prompt_builder.build_direct_prompt(question, conversation=safe_conversation)
+            prompt = prompt_builder.build_direct_prompt(
+                question,
+                conversation=safe_conversation,
+                conversation_summary=conversation_summary
+            )
             answer = ask_ollama(prompt, model=selected_model)
             answer_text = answer[0] if isinstance(answer, tuple) else answer
             updated_conversation = append_conversation_message(
@@ -162,13 +236,15 @@ def ask_question():
             prompt = prompt_builder.build_hybrid_prompt(
                 context_chunks,
                 question,
-                conversation=safe_conversation
+                conversation=safe_conversation,
+                conversation_summary=conversation_summary
             )
         else:
             prompt = prompt_builder.build_prompt(
                 context_chunks,
                 question,
-                conversation=safe_conversation
+                conversation=safe_conversation,
+                conversation_summary=conversation_summary
             )
         answer = ask_ollama(prompt, model=selected_model)
         answer_text = answer[0] if isinstance(answer, tuple) else answer
@@ -204,12 +280,27 @@ def ask_question():
 
 @app.route("/conversation", methods=["GET"])
 def conversation():
-    return jsonify(load_conversation()), 200
+    conversation_data = load_conversation()
+    conversation_data["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
+    return jsonify(conversation_data), 200
 
 @app.route("/conversation/clear", methods=["POST"])
 def clear_conversation():
     clear_conversation_file()
-    return jsonify(load_conversation()), 200
+    conversation_data = load_conversation()
+    conversation_data["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
+    return jsonify(conversation_data), 200
+
+@app.route("/conversation/summarize", methods=["POST"])
+def summarize_conversation():
+    data = request.get_json(silent=True) or {}
+    selected_model = data.get("model", "").strip() or None
+    conversation = summarize_if_needed(
+        load_conversation(),
+        model=selected_model
+    )
+    conversation["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
+    return jsonify(conversation), 200
     
 @app.route("/models", methods=["GET"])
 def models():

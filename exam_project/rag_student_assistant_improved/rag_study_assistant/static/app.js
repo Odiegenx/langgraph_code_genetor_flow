@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
     let conversation = [];
+    let summaryTriggerMessages = 10;
 
     updateModels();
     updateStatus();
@@ -21,7 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const question = questionInput.value.trim();
         if (!question) return;
 
-        setLoading(true);
+        const willSummarize = conversation.length > summaryTriggerMessages;
+        setLoading(
+            true,
+            willSummarize
+                ? '⏳ Summarizing older conversation, then answering...'
+                : '⏳ Processing your question...'
+        );
         answerSection.classList.remove('hidden');
         const answerMode = answerModeSelect.value;
         sourcesList.innerHTML = '';
@@ -149,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/conversation');
             const data = await response.json();
+            if (typeof data.summary_trigger_messages === 'number') {
+                summaryTriggerMessages = data.summary_trigger_messages;
+            }
             renderConversation(data.messages || []);
         } catch (err) {
             renderTransientMessage('assistant', `Could not load conversation: ${err.message}`);

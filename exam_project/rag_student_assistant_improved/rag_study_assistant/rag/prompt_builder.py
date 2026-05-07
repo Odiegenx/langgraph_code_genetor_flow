@@ -27,6 +27,10 @@ class PromptBuilder:
                 lines.append(f"{role.title()}: {content}")
         return "\n".join(lines) if lines else "No previous conversation."
 
+    def _format_summary(self, conversation_summary):
+        summary = str(conversation_summary or "").strip()
+        return summary if summary else "No conversation summary."
+
     def _format_context(self, context_chunks):
         if not context_chunks:
             return "No relevant document context was retrieved."
@@ -35,19 +39,23 @@ class PromptBuilder:
             for chunk in context_chunks
         )
 
-    def build_direct_prompt(self, question, conversation=None):
+    def build_direct_prompt(self, question, conversation=None, conversation_summary=""):
         """Build a prompt that relies solely on the model's own knowledge."""
         return (
             "You are a knowledgeable study assistant. Answer the following question using "
             "your own knowledge. Be clear, educational, and concise.\n\n"
+            "Conversation summary:\n"
+            f"{self._format_summary(conversation_summary)}\n\n"
             "Conversation history:\n"
             f"{self._format_conversation(conversation)}\n\n"
+            "The conversation summary is only memory of this dialogue. It is not a source "
+            "and must not be cited as evidence.\n\n"
             "Important: Do not cite local documents in this mode because no document "
             "context is being provided.\n\n"
             f"Question: {question}\n\nAnswer:"
         )
 
-    def build_prompt(self, context_chunks, question, conversation=None):
+    def build_prompt(self, context_chunks, question, conversation=None, conversation_summary=""):
         """
         Inserts context and question into the 4T prompt template.
         
@@ -63,13 +71,17 @@ class PromptBuilder:
         prompt = prompt.replace("{question}", question)
         return (
             f"{prompt}\n\n"
+            "Conversation summary:\n"
+            f"{self._format_summary(conversation_summary)}\n\n"
             "Conversation history:\n"
             f"{self._format_conversation(conversation)}\n\n"
+            "The conversation summary is only memory of this dialogue. It is not a document "
+            "source and must not be cited as evidence.\n\n"
             "Guardrail: Answer only from the retrieved document context. If the context "
             "does not contain enough information, say that the documents do not cover it."
         )
 
-    def build_hybrid_prompt(self, context_chunks, question, conversation=None):
+    def build_hybrid_prompt(self, context_chunks, question, conversation=None, conversation_summary=""):
         """Build a prompt that uses documents first and separates model knowledge."""
         return (
             "You are a careful study assistant using hybrid RAG.\n\n"
@@ -85,6 +97,7 @@ class PromptBuilder:
             "- Clearly separate document-based information from general model knowledge.\n"
             "- Do not invent citations.\n"
             "- Only cite sources from the retrieved document context.\n"
+            "- The conversation summary is memory only; do not cite it as a source.\n"
             "- If the documents do not cover part of the question, say so before adding "
             "general model knowledge.\n\n"
             "Required response format:\n"
@@ -94,6 +107,8 @@ class PromptBuilder:
             "...\n\n"
             "Sources:\n"
             "- list only retrieved document sources used\n\n"
+            "Conversation summary:\n"
+            f"{self._format_summary(conversation_summary)}\n\n"
             "Conversation history:\n"
             f"{self._format_conversation(conversation)}\n\n"
             "Retrieved document context:\n"

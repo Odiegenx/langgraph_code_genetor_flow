@@ -267,3 +267,87 @@ Expected benefit:
 - Backend owns conversation memory instead of trusting frontend state.
 - Creates a clear foundation for a later conversation-summary feature.
 - Keeps conversation memory local and inspectable.
+
+### 2026-05-07: Added conversation summary compression
+
+Reason:
+
+Persistent conversation memory can grow over time. Sending the full conversation to the model would increase prompt size and slow down responses.
+
+Change:
+
+Updated:
+
+```text
+app.py
+rag/prompt_builder.py
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+The backend now summarizes older messages when the conversation exceeds the configured threshold.
+
+Current behavior:
+
+- If the conversation has more than 10 messages, older messages are summarized.
+- The latest 6 messages are kept verbatim.
+- The summary is saved in `conversations/current_session.json`.
+- Prompts receive both `conversation summary` and recent messages.
+
+New endpoint:
+
+```text
+POST /conversation/summarize
+```
+
+Guardrail:
+
+The summary is memory only. It is not a document source and must not be cited as evidence.
+
+Expected benefit:
+
+- Keeps prompts smaller as conversations grow.
+- Preserves continuity across longer conversations.
+- Demonstrates context-window management and memory compression.
+- Prepares the app for longer study sessions without sending full chat history every time.
+
+### 2026-05-07: Added summary progress message and longer summary timeout
+
+Reason:
+
+The request that triggers conversation summary performs two model operations: one to summarize older messages and one to answer the current question. This can take longer than a normal answer and should be visible to the user.
+
+Change:
+
+Updated:
+
+```text
+rag/ollama_client.py
+app.py
+static/app.js
+docs/user_guide.md
+docs/runbook.md
+```
+
+The frontend now shows:
+
+```text
+Summarizing older conversation, then answering...
+```
+
+when the local conversation is longer than the summary threshold.
+
+The backend now uses a longer timeout for summary calls:
+
+```text
+240 seconds
+```
+
+Normal answer calls still use the default timeout.
+
+Expected benefit:
+
+- The user can see why a request may take longer.
+- Summary has more time to complete on slower local/cloud models.
+- Normal answers are not forced to use the longer timeout.

@@ -55,6 +55,7 @@ Output saved to: `site_validation_output.txt`
 - `GET /status` – Report whether documents and index are available
 - `GET /conversation` – Return persisted local conversation memory
 - `POST /conversation/clear` – Clear persisted local conversation memory
+- `POST /conversation/summarize` – Compress older messages into conversation summary
 
 ### Answer modes
 
@@ -97,6 +98,20 @@ Generated while using the chat:
 - `conversations/current_session.json`: Stores the current local conversation.
 
 This is runtime data and should not be committed.
+
+The file has two main fields:
+
+- `summary`: compressed memory from older messages
+- `messages`: recent messages kept verbatim
+
+The summary is not a document source. It is only used as conversation memory.
+
+Summary behavior:
+
+- automatic summary starts when the stored conversation has more than 10 messages
+- older messages are compressed into `summary`
+- the latest 6 messages are kept verbatim
+- summary calls use a longer Ollama timeout than normal answer calls
 
 ## Troubleshooting
 
