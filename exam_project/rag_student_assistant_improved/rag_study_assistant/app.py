@@ -17,27 +17,54 @@ def index():
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
+
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({"error": "Invalid JSON payload"}), 400
+        return jsonify({"error": "Request body must be a valid JSON object"}), 400
 
     question = data.get("question", "").strip()
     selected_model = data.get("model", "").strip() or None
 
-    if not question:
-        return jsonify({"error": "Question is required"}), 400
 
-    try:
+        question = data.get("question", "")
+        if not isinstance(question, str):
+            return jsonify({"error": "Question must be a string"}), 400
+        question = question.strip()
+
+        raw_use_rag = data.get("use_rag", True)
+        if isinstance(raw_use_rag, bool):
+            use_rag = raw_use_rag
+        elif isinstance(raw_use_rag, str):
+            normalized_use_rag = raw_use_rag.strip().lower()
+            if normalized_use_rag in ("true", "1", "yes", "on"):
+                use_rag = True
+            elif normalized_use_rag in ("false", "0", "no", "off"):
+                use_rag = False
+            else:
+                return jsonify({"error": "use_rag must be a boolean"}), 400
+        else:
+            return jsonify({"error": "use_rag must be a boolean"}), 400
+
+        if not question:
+            return jsonify({"error": "Question is required"}), 400
+
+        if not use_rag:
+            prompt_builder = PromptBuilder()
+            prompt = prompt_builder.build_direct_prompt(question)
+            answer = ask_ollama(prompt)
+            return jsonify({
+                "answer": answer[0] if isinstance(answer, tuple) else answer,
+                "citations": []
+            }), 200
+
         if not os.path.exists(INDEX_FILE):
             return jsonify({"error": "No index found. Please run ingestion first."}), 400
 
         chunks = load_index()
         scores = score_chunks(question, chunks)
-        
-        # Sort chunks by score and take top 3
+
         sorted_chunks = sorted(chunks, key=lambda c: scores.get(c['chunk_id'], 0), reverse=True)[:3]
-        
-        # Prepare context for prompt builder
+
         context_chunks = [
             {
                 'content': chunk['content'],
@@ -45,12 +72,11 @@ def ask_question():
             }
             for chunk in sorted_chunks
         ]
-        
+
         prompt_builder = PromptBuilder()
         prompt = prompt_builder.build_prompt(context_chunks, question)
         answer = ask_ollama(prompt, model=selected_model)
 
-        # Format retrieved chunks for citations
         retrieved = [
             {
                 'source': chunk['filename'],
@@ -100,4 +126,5 @@ def status_check():
     }), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=True)

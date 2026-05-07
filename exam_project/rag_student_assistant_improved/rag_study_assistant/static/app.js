@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loading = document.getElementById('loading');
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
+    const useRagCheckbox = document.getElementById('use-rag-checkbox');
 
     updateModels();
     updateStatus();
@@ -23,13 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
         sourcesList.innerHTML = '';
 
         try {
+            const useRag = useRagCheckbox.checked;
             const response = await fetch('/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify({
                     question,
-                    model: modelSelect.value
+                    model: modelSelect.value,
+                    use_rag: useRag
                 })
+
             });
 
             const data = await response.json();
@@ -39,12 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `Model: ${data.model}\n\n${data.answer || 'No answer returned.'}`
                     : data.answer || 'No answer returned.';
 
-                if (data.citations && data.citations.length > 0) {
+                const sourcesHeading = document.querySelector('#answer-section h3');
+                if (useRag && data.citations && data.citations.length > 0) {
+                    sourcesHeading.classList.remove('hidden');
+                    sourcesList.classList.remove('hidden');
                     sourcesList.innerHTML = data.citations.map(cite =>
                         `<li><strong>${escapeHtml(cite.source || 'Unknown source')}</strong> ` +
                         `(Page: ${escapeHtml(String(cite.page || 'n/a'))})<br>` +
                         `${escapeHtml(cite.snippet || '')}</li>`
                     ).join('');
+                } else {
+                    sourcesHeading.classList.add('hidden');
+                    sourcesList.classList.add('hidden');
                 }
             } else {
                 answerContent.textContent = `Error: ${data.error || 'Failed to get response'}`;
