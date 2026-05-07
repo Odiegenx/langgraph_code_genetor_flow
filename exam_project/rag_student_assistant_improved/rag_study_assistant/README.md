@@ -2,6 +2,12 @@
 
 A locally-hosted Retrieval-Augmented Generation (RAG) system designed for students studying "LLM for Developers" course material. This system operates entirely offline using Ollama for LLM inference and simple keyword-based retrieval.
 
+For the practical user guide, including where to add documents, how to ingest them, and how to troubleshoot Ollama issues, see:
+
+```text
+docs/user_guide.md
+```
+
 ## Features
 
 - **Local Operation**: Runs completely on your machine with no internet access required
@@ -19,39 +25,43 @@ A locally-hosted Retrieval-Augmented Generation (RAG) system designed for studen
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd rag_study_assistant
+1. Open the project folder:
+   ```powershell
+   cd "C:\Users\pf\Desktop\Skole\LLM for Developers\LLM\mandetory1\Mandatory-1 real\exam_project\rag_student_assistant_improved\rag_study_assistant"
    ```
 
 2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
 3. Ensure Ollama is running:
-   ```bash
+   ```powershell
    ollama serve
    ```
 
-4. Pull the default model (if not already present):
-   ```bash
-   ollama pull qwen3:8b
+4. If you use the default cloud model, make sure Ollama is signed in:
+   ```powershell
+   ollama signin
    ```
 
 ## Usage
 
 1. Place your study materials (`.txt`, `.md`, `.pdf`) in the `documents/` folder.
 
-2. Start the application:
-   ```bash
-   python app.py
+2. Ingest documents from the browser using `Re-ingest documents`, or run:
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe rag\ingest.py
    ```
 
-3. Open your browser and navigate to `http://localhost:5000`
+3. Start the application:
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe app.py
+   ```
 
-4. Ask questions about your course material and receive answers grounded in your documents.
+4. Open your browser and navigate to `http://localhost:5000`
+
+5. Ask questions about your course material and receive answers grounded in your documents.
 
 ## Configuration
 
@@ -63,9 +73,9 @@ Set environment variables to customize behavior:
 - `RETRIEVAL_K`: Number of top chunks to retrieve per query (default: 3)
 
 Example:
-```bash
-export OLLAMA_MODEL=llama3:8b
-python app.py
+```powershell
+$env:OLLAMA_MODEL="qwen3:8b"
+..\..\..\.venv\Scripts\python.exe app.py
 ```
 
 ## Project Structure
@@ -95,8 +105,26 @@ rag_study_assistant/
 For detailed information about this project, see:
 
 - [Architecture](docs/architecture.md)
+- [User guide](docs/user_guide.md)
 - [Runbook](docs/runbook.md)
 - [Limitations](docs/limitations.md)
+- [MVP fix log](docs/mvp_fix_log.md)
+
+## Troubleshooting
+
+### Ollama 401 Unauthorized
+
+If the app finds sources but the answer says `401 Client Error: Unauthorized`, the selected Ollama cloud model requires login:
+
+```powershell
+ollama signin
+```
+
+Then restart the Flask app.
+
+### Ollama timeout
+
+If the app finds sources but the answer says `Read timed out`, RAG retrieval is working but the model did not answer before the timeout. Try again, restart Ollama, or use a faster model.
 
 ## License
 

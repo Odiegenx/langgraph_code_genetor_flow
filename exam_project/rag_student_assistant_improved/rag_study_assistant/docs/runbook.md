@@ -14,25 +14,26 @@
 
 1. Clone or extract the project into your working directory.
 2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 3. Ensure Ollama is running on `http://localhost:11434`
 4. Run the ingestion process to index documents:
-   ```bash
-   python rag/ingest.py
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe rag\ingest.py
    ```
+   You can also use the `Re-ingest documents` button in the browser UI.
 5. Start the web application:
-   ```bash
-   python app.py
+   ```powershell
+   ..\..\..\.venv\Scripts\python.exe app.py
    ```
 6. Open browser at `http://localhost:5000`
 
 ## Validation Commands
 
 Run structural and syntax validation:
-```bash
-python validate_project.py
+```powershell
+..\..\..\.venv\Scripts\python.exe validate_project.py
 ```
 
 This will check:
@@ -48,6 +49,8 @@ Output saved to: `site_validation_output.txt`
 ### Web Routes
 - `GET /` – Serve main UI page
 - `POST /ask` – Accept question input and return answer + citations
+- `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
+- `GET /status` – Report whether documents and index are available
 
 ### Configurable Settings
 - Default LLM model: Editable in `rag/ollama_client.py` or config/environment variable
@@ -57,6 +60,24 @@ Output saved to: `site_validation_output.txt`
 ### Index Files
 Generated after running `rag/ingest.py`:
 - `index/chunks.json`: Stores processed text chunks and metadata
+
+## Troubleshooting
+
+### 401 Unauthorized from Ollama
+
+If using an Ollama cloud model, sign in:
+
+```powershell
+ollama signin
+```
+
+Then restart the Flask app.
+
+### Timeout from Ollama
+
+If sources appear but the answer is a timeout error, the RAG part is working and the model call is the slow part.
+
+Try asking again, restarting Ollama, or using a faster model.
 
 ## Local-Only Security Assumptions
 
