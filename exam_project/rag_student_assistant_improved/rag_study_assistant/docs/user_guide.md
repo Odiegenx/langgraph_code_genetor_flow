@@ -57,7 +57,7 @@ Re-ingest documents
 Or from PowerShell, while standing in the app folder:
 
 ```powershell
-..\..\..\.venv\Scripts\python.exe rag\ingest.py
+.\.venv\Scripts\python.exe rag\ingest.py
 ```
 
 ## How to run the app
@@ -73,7 +73,7 @@ Then start the Flask app:
 
 ```powershell
 cd "C:\Users\pf\Desktop\Skole\LLM for Developers\LLM\mandetory1\Mandatory-1 real\exam_project\rag_student_assistant_improved\rag_study_assistant"
-..\..\..\.venv\Scripts\python.exe app.py
+.\.venv\Scripts\python.exe app.py
 ```
 
 Open:
@@ -84,7 +84,27 @@ http://localhost:5000
 
 ## Model configuration
 
-The default model is configured in:
+The app can load available models from Ollama and show them in the browser model dropdown.
+
+The model list is loaded from:
+
+```text
+GET /models
+```
+
+The backend retrieves that list from Ollama:
+
+```text
+GET http://localhost:11434/api/tags
+```
+
+When asking a question, the selected model is sent to:
+
+```text
+POST /ask
+```
+
+The default fallback model is configured in:
 
 ```text
 rag/ollama_client.py
@@ -100,8 +120,10 @@ You can override it before starting the app:
 
 ```powershell
 $env:OLLAMA_MODEL="qwen3:8b"
-..\..\..\.venv\Scripts\python.exe app.py
+.\.venv\Scripts\python.exe app.py
 ```
+
+If the model dropdown cannot load models, check that Ollama is running on `localhost:11434`.
 
 ## 4T prompt engineering
 
@@ -134,7 +156,7 @@ The app inserts:
 Run:
 
 ```powershell
-..\..\..\.venv\Scripts\python.exe validate_project.py
+.\.venv\Scripts\python.exe validate_project.py
 ```
 
 The result is written to:
@@ -150,7 +172,7 @@ site_validation_output.txt
 Use the project virtual environment explicitly:
 
 ```powershell
-..\..\..\.venv\Scripts\python.exe app.py
+.\.venv\Scripts\python.exe app.py
 ```
 
 ### Ollama 401 Unauthorized

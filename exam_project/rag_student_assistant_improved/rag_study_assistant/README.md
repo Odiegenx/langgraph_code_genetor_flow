@@ -12,6 +12,7 @@ docs/user_guide.md
 
 - **Local Operation**: Runs completely on your machine with no internet access required
 - **Offline LLM Integration**: Communicates with a local Ollama instance
+- **Model Selection**: Loads available Ollama models and lets the user choose one in the UI
 - **Document Ingestion**: Supports `.txt`, `.md`, and `.pdf` files
 - **Keyword-Based Retrieval**: Uses BM25/TF-IDF for efficient chunk matching
 - **Source Citations**: Answers always include references to original documents
@@ -32,7 +33,8 @@ docs/user_guide.md
 
 2. Install dependencies:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   python -m venv .venv
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
 3. Ensure Ollama is running:
@@ -51,12 +53,12 @@ docs/user_guide.md
 
 2. Ingest documents from the browser using `Re-ingest documents`, or run:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe rag\ingest.py
+   .\.venv\Scripts\python.exe rag\ingest.py
    ```
 
 3. Start the application:
    ```powershell
-   ..\..\..\.venv\Scripts\python.exe app.py
+   .\.venv\Scripts\python.exe app.py
    ```
 
 4. Open your browser and navigate to `http://localhost:5000`
@@ -75,7 +77,7 @@ Set environment variables to customize behavior:
 Example:
 ```powershell
 $env:OLLAMA_MODEL="qwen3:8b"
-..\..\..\.venv\Scripts\python.exe app.py
+.\.venv\Scripts\python.exe app.py
 ```
 
 ## Project Structure
