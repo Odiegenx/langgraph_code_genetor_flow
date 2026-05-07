@@ -3,6 +3,7 @@ import os
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 from rag.ingest import process_documents
 from rag.retrieve import score_chunks, load_index
 from rag.prompt_builder import PromptBuilder
@@ -13,7 +14,9 @@ app = Flask(__name__)
 INDEX_FILE = "index/chunks.json"
 DOCUMENTS_DIR = "documents/"
 CONVERSATION_DIR = "conversations"
-CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
+CONVERSATION_INDEX_FILE = os.path.join(CONVERSATION_DIR, "index.json")
+CONVERSATION_SESSIONS_DIR = os.path.join(CONVERSATION_DIR, "sessions")
+LEGACY_CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
 SUMMARY_PROMPT_FILE = Path("prompts/summary_prompt.md")
 VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
 RECENT_MESSAGE_LIMIT = 6
@@ -24,6 +27,9 @@ SUMMARY_MAX_CHARS = 6000
 def utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
+def new_conversation_id():
+    return f"{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
+
 def empty_conversation():
     return {
         "summary": "",
@@ -31,12 +37,121 @@ def empty_conversation():
         "messages": []
     }
 
-def load_conversation():
-    if not os.path.exists(CONVERSATION_FILE):
+def conversation_file_path(conversation_id):
+    safe_id = "".join(
+        char for char in str(conversation_id)
+        if char.isalnum() or char in {"_", "-"}
+    )
+    if not safe_id:
+        raise ValueError("Invalid conversation id")
+    return os.path.join(CONVERSATION_SESSIONS_DIR, f"{safe_id}.json")
+
+def load_conversation_index():
+    if not os.path.exists(CONVERSATION_INDEX_FILE):
+        return []
+
+    try:
+        with open(CONVERSATION_INDEX_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    if not isinstance(data, list):
+        return []
+
+    conversations = []
+    for item in data:
+        if isinstance(item, dict) and item.get("id"):
+            conversations.append({
+                "id": str(item.get("id")),
+                "title": str(item.get("title") or "New conversation"),
+                "created_at": str(item.get("created_at") or utc_now_iso()),
+                "updated_at": str(item.get("updated_at") or utc_now_iso()),
+                "archived": bool(item.get("archived", False)),
+                "archived_at": str(item.get("archived_at") or "")
+            })
+    return conversations
+
+def visible_conversations():
+    return [
+        item for item in load_conversation_index()
+        if not item.get("archived", False)
+    ]
+
+def save_conversation_index(conversations):
+    os.makedirs(CONVERSATION_DIR, exist_ok=True)
+    with open(CONVERSATION_INDEX_FILE, "w", encoding="utf-8") as f:
+        json.dump(conversations, f, indent=2, ensure_ascii=False)
+
+def create_conversation(title="New conversation"):
+    conversation_id = new_conversation_id()
+    now = utc_now_iso()
+    conversations = load_conversation_index()
+    conversations.insert(0, {
+        "id": conversation_id,
+        "title": str(title or "New conversation"),
+        "created_at": now,
+        "updated_at": now
+    })
+    save_conversation_index(conversations)
+    save_conversation(empty_conversation(), conversation_id)
+    return conversations[0]
+
+def ensure_conversation(conversation_id=None):
+    conversations = visible_conversations()
+    if conversation_id and any(item["id"] == conversation_id for item in conversations):
+        return conversation_id
+
+    if conversations:
+        return conversations[0]["id"]
+
+    return create_conversation()["id"]
+
+def update_conversation_metadata(conversation_id, title_candidate=None):
+    conversations = load_conversation_index()
+    now = utc_now_iso()
+    updated = False
+
+    for item in conversations:
+        if item["id"] != conversation_id:
+            continue
+
+        if title_candidate and item.get("title") == "New conversation":
+            title = str(title_candidate).strip().replace("\n", " ")
+            item["title"] = title[:48] if title else "New conversation"
+        item["updated_at"] = now
+        updated = True
+        break
+
+    if updated:
+        conversations.sort(key=lambda item: item.get("updated_at", ""), reverse=True)
+        save_conversation_index(conversations)
+
+def archive_conversation(conversation_id):
+    conversations = load_conversation_index()
+    now = utc_now_iso()
+    for item in conversations:
+        if item["id"] == conversation_id:
+            item["archived"] = True
+            item["archived_at"] = now
+            item["updated_at"] = now
+            break
+
+    save_conversation_index(conversations)
+    active_conversations = visible_conversations()
+    if not active_conversations:
+        active_conversations = [create_conversation()]
+
+    return active_conversations
+
+def load_conversation(conversation_id=None):
+    conversation_id = ensure_conversation(conversation_id)
+    conversation_path = conversation_file_path(conversation_id)
+    if not os.path.exists(conversation_path):
         return empty_conversation()
 
     try:
-        with open(CONVERSATION_FILE, "r", encoding="utf-8") as f:
+        with open(conversation_path, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError):
         return empty_conversation()
@@ -64,16 +179,20 @@ def load_conversation():
         ]
     }
 
-def save_conversation(conversation):
-    os.makedirs(CONVERSATION_DIR, exist_ok=True)
-    with open(CONVERSATION_FILE, "w", encoding="utf-8") as f:
+def save_conversation(conversation, conversation_id=None):
+    conversation_id = ensure_conversation(conversation_id)
+    os.makedirs(CONVERSATION_SESSIONS_DIR, exist_ok=True)
+    with open(conversation_file_path(conversation_id), "w", encoding="utf-8") as f:
         json.dump(conversation, f, indent=2, ensure_ascii=False)
 
-def clear_conversation_file():
-    save_conversation(empty_conversation())
+def clear_conversation_file(conversation_id=None):
+    conversation_id = ensure_conversation(conversation_id)
+    save_conversation(empty_conversation(), conversation_id)
+    update_conversation_metadata(conversation_id)
 
-def append_conversation_message(role, content, **metadata):
-    conversation = load_conversation()
+def append_conversation_message(role, content, conversation_id=None, **metadata):
+    conversation_id = ensure_conversation(conversation_id)
+    conversation = load_conversation(conversation_id)
     message = {
         "role": role,
         "content": str(content),
@@ -86,11 +205,16 @@ def append_conversation_message(role, content, **metadata):
     conversation.setdefault("archive", [])
     conversation.setdefault("messages", [])
     conversation["messages"].append(message)
-    save_conversation(conversation)
+    save_conversation(conversation, conversation_id)
+    update_conversation_metadata(
+        conversation_id,
+        title_candidate=content if role == "user" else None
+    )
     return conversation
 
-def conversation_response(conversation):
+def conversation_response(conversation, conversation_id=None):
     response = dict(conversation)
+    response["conversation_id"] = conversation_id
     response["archive"] = list(conversation.get("archive", []))
     response["messages"] = list(conversation.get("messages", []))
     response["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
@@ -145,7 +269,7 @@ def clamp_summary(summary_text):
     trimmed = summary[:SUMMARY_MAX_CHARS - len(suffix)].rstrip()
     return f"{trimmed}{suffix}"
 
-def summarize_if_needed(conversation, model=None):
+def summarize_if_needed(conversation, model=None, conversation_id=None):
     messages = conversation.get("messages", [])
     if len(messages) <= SUMMARY_TRIGGER_MESSAGES:
         return conversation
@@ -174,7 +298,7 @@ def summarize_if_needed(conversation, model=None):
         "archive": conversation.get("archive", []) + older_messages,
         "messages": recent_messages
     }
-    save_conversation(summarized_conversation)
+    save_conversation(summarized_conversation, conversation_id)
     return summarized_conversation
 
 @app.route("/")
@@ -205,9 +329,11 @@ def ask_question():
         if not question:
             return jsonify({"error": "Question is required"}), 400
 
+        conversation_id = ensure_conversation(data.get("conversation_id"))
         persisted_conversation = summarize_if_needed(
-            load_conversation(),
-            model=selected_model
+            load_conversation(conversation_id),
+            model=selected_model,
+            conversation_id=conversation_id
         )
         safe_conversation = recent_prompt_messages(
             persisted_conversation,
@@ -218,6 +344,7 @@ def ask_question():
         append_conversation_message(
             "user",
             question,
+            conversation_id=conversation_id,
             model=selected_model or get_model(),
             answer_mode=answer_mode
         )
@@ -233,6 +360,7 @@ def ask_question():
             updated_conversation = append_conversation_message(
                 "assistant",
                 answer_text,
+                conversation_id=conversation_id,
                 model=selected_model or get_model(),
                 answer_mode="model",
                 use_rag=False,
@@ -244,7 +372,7 @@ def ask_question():
                 "model": selected_model or get_model(),
                 "answer_mode": "model",
                 "use_rag": False,
-                "conversation": conversation_response(updated_conversation)
+                "conversation": conversation_response(updated_conversation, conversation_id)
             }), 200
 
         if not os.path.exists(INDEX_FILE):
@@ -291,6 +419,7 @@ def ask_question():
         updated_conversation = append_conversation_message(
             "assistant",
             answer_text,
+            conversation_id=conversation_id,
             model=selected_model or get_model(),
             answer_mode=answer_mode,
             use_rag=True,
@@ -303,7 +432,7 @@ def ask_question():
             "model": selected_model or get_model(),
             "answer_mode": answer_mode,
             "use_rag": True,
-            "conversation": conversation_response(updated_conversation)
+            "conversation": conversation_response(updated_conversation, conversation_id)
         }), 200
 
     except Exception as e:
@@ -311,24 +440,68 @@ def ask_question():
 
 @app.route("/conversation", methods=["GET"])
 def conversation():
-    conversation_data = load_conversation()
-    return jsonify(conversation_response(conversation_data)), 200
+    conversation_id = ensure_conversation(request.args.get("conversation_id"))
+    conversation_data = load_conversation(conversation_id)
+    return jsonify(conversation_response(conversation_data, conversation_id)), 200
+
+@app.route("/conversation/<conversation_id>", methods=["GET"])
+def conversation_by_id(conversation_id):
+    conversation_id = ensure_conversation(conversation_id)
+    conversation_data = load_conversation(conversation_id)
+    return jsonify(conversation_response(conversation_data, conversation_id)), 200
 
 @app.route("/conversation/clear", methods=["POST"])
 def clear_conversation():
-    clear_conversation_file()
-    conversation_data = load_conversation()
-    return jsonify(conversation_response(conversation_data)), 200
+    data = request.get_json(silent=True) or {}
+    conversation_id = ensure_conversation(data.get("conversation_id"))
+    clear_conversation_file(conversation_id)
+    conversation_data = load_conversation(conversation_id)
+    return jsonify(conversation_response(conversation_data, conversation_id)), 200
+
+@app.route("/conversation/<conversation_id>/clear", methods=["POST"])
+def clear_conversation_by_id(conversation_id):
+    conversation_id = ensure_conversation(conversation_id)
+    clear_conversation_file(conversation_id)
+    conversation_data = load_conversation(conversation_id)
+    return jsonify(conversation_response(conversation_data, conversation_id)), 200
+
+@app.route("/conversation/<conversation_id>", methods=["DELETE"])
+def archive_conversation_by_id(conversation_id):
+    conversations = archive_conversation(conversation_id)
+    next_conversation_id = conversations[0]["id"]
+    return jsonify({
+        "archived_conversation_id": conversation_id,
+        "active_conversation_id": next_conversation_id,
+        "conversations": conversations
+    }), 200
 
 @app.route("/conversation/summarize", methods=["POST"])
 def summarize_conversation():
     data = request.get_json(silent=True) or {}
     selected_model = data.get("model", "").strip() or None
+    conversation_id = ensure_conversation(data.get("conversation_id"))
     conversation = summarize_if_needed(
-        load_conversation(),
-        model=selected_model
+        load_conversation(conversation_id),
+        model=selected_model,
+        conversation_id=conversation_id
     )
-    return jsonify(conversation_response(conversation)), 200
+    return jsonify(conversation_response(conversation, conversation_id)), 200
+
+@app.route("/conversations", methods=["GET"])
+def conversations():
+    ensure_conversation()
+    return jsonify({
+        "conversations": visible_conversations()
+    }), 200
+
+@app.route("/conversations", methods=["POST"])
+def new_conversation():
+    data = request.get_json(silent=True) or {}
+    conversation_meta = create_conversation(data.get("title") or "New conversation")
+    return jsonify({
+        "conversation": conversation_meta,
+        "conversations": visible_conversations()
+    }), 201
     
 @app.route("/models", methods=["GET"])
 def models():

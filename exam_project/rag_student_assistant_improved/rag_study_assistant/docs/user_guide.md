@@ -10,7 +10,7 @@ The application first searches the user's local documents, selects relevant text
 
 The goal is to make answers grounded in the student's own notes and course files.
 
-The app keeps a persistent local conversation history in `conversations/current_session.json`. This supports follow-up questions and allows the conversation to survive browser refreshes.
+The app keeps persistent local conversation sessions in `conversations/`. This supports follow-up questions, multiple conversation threads, and browser refreshes.
 
 ## Application flow
 
@@ -218,10 +218,16 @@ site_validation_output.txt
 
 ## Conversation memory
 
-The current conversation is stored locally in:
+Conversation metadata is stored locally in:
 
 ```text
-conversations/current_session.json
+conversations/index.json
+```
+
+Each conversation is stored as a separate session file:
+
+```text
+conversations/sessions/<conversation_id>.json
 ```
 
 The file contains:
@@ -254,15 +260,22 @@ Summarizing older conversation, then answering...
 
 Summary uses a longer Ollama timeout than a normal answer because that request performs memory compression before the final answer is generated.
 
+The left sidebar lists conversations from `conversations/index.json`. Selecting a conversation loads that session file, and `POST /ask` receives the selected `conversation_id`.
+
 Conversation endpoints:
 
 ```text
+GET /conversations
+POST /conversations
 GET /conversation
+GET /conversation/<conversation_id>
 POST /conversation/clear
+POST /conversation/<conversation_id>/clear
+DELETE /conversation/<conversation_id>
 POST /conversation/summarize
 ```
 
-The `Clear conversation` button clears the persisted session file.
+Each conversation in the sidebar has an archive button. Archiving a conversation hides it from the visible list, keeps its session file in `conversations/sessions/`, and switches the UI to another available conversation.
 
 The `conversations/` folder is runtime data and is ignored by git.
 

@@ -17,8 +17,8 @@ docs/user_guide.md
 - **Keyword-Based Retrieval**: Uses BM25/TF-IDF for efficient chunk matching
 - **Source Citations**: Answers always include references to original documents
 - **Answer Modes**: Supports RAG only, model only, and hybrid answers
-- **Conversation UI**: Supports follow-up questions with short browser-side history
-- **Persistent Local Conversation**: Stores the current conversation in a local runtime JSON file
+- **Conversation UI**: Supports follow-up questions and multiple visible conversation threads
+- **Persistent Local Conversations**: Stores conversation sessions in local runtime JSON files
 - **Conversation Summary + Archive**: Compresses older messages for prompts, caps summary size, and keeps an exact local archive
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 

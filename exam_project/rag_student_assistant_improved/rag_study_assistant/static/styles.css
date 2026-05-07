@@ -16,9 +16,20 @@ header {
 }
 
 main {
-  max-width: 900px;
+  max-width: 1180px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.workspace {
+  min-width: 0;
 }
 
 section {
@@ -84,6 +95,90 @@ button:hover {
 button:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
+}
+
+#conversation-sidebar {
+  background: #213243;
+  color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+#conversation-sidebar h2 {
+  color: white;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+#new-conversation-btn {
+  padding: 0.5rem 0.75rem;
+  background: #2ecc71;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+#new-conversation-btn:hover {
+  background: #27ae60;
+}
+
+#conversation-session-list {
+  display: grid;
+  gap: 0.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.conversation-session-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.conversation-session {
+  min-width: 0;
+  text-align: left;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-session-row:hover .conversation-session,
+.conversation-session-row.active .conversation-session {
+  background: #3498db;
+}
+
+.archive-conversation-btn {
+  background: rgba(231,76,60,0.85);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.archive-conversation-btn:hover {
+  background: #c0392b;
+}
+
+.empty-conversation-list {
+  margin: 0;
+  color: #d5dde5;
+  font-size: 0.9rem;
 }
 
 .hidden {
@@ -204,6 +299,19 @@ footer {
 }
 
 @media (max-width: 600px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #conversation-sidebar {
+    position: static;
+    max-height: 320px;
+  }
+
+  #conversation-session-list {
+    max-height: 220px;
+  }
+
   main {
     padding: 0 0.5rem;
   }

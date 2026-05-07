@@ -53,8 +53,11 @@ Output saved to: `site_validation_output.txt`
 - `GET /models` – Return available Ollama models for the UI dropdown
 - `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
 - `GET /status` – Report whether documents and index are available
-- `GET /conversation` – Return persisted local conversation memory
-- `POST /conversation/clear` – Clear persisted local conversation memory
+- `GET /conversations` – Return the local conversation list
+- `POST /conversations` – Create a new conversation
+- `GET /conversation/<conversation_id>` – Return one persisted local conversation
+- `POST /conversation/<conversation_id>/clear` – Clear one persisted local conversation
+- `DELETE /conversation/<conversation_id>` – Archive one conversation and hide it from the visible list
 - `POST /conversation/summarize` – Compress older messages into conversation summary
 
 ### Answer modes
@@ -66,10 +69,7 @@ Output saved to: `site_validation_output.txt`
   "question": "What is acceptance testing?",
   "model": "qwen3:8b",
   "answer_mode": "hybrid",
-  "conversation": [
-    {"role": "user", "content": "previous question"},
-    {"role": "assistant", "content": "previous answer"}
-  ]
+  "conversation_id": "20260507_120000_abcd1234"
 }
 ```
 
@@ -103,7 +103,8 @@ Generated after running `rag/ingest.py`:
 
 Generated while using the chat:
 
-- `conversations/current_session.json`: Stores the current local conversation.
+- `conversations/index.json`: Stores the visible conversation list.
+- `conversations/sessions/<conversation_id>.json`: Stores each local conversation.
 
 This is runtime data and should not be committed.
 

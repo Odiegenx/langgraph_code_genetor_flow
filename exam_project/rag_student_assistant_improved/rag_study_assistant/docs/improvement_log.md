@@ -460,3 +460,91 @@ Expected benefit:
 - Prompt engineering is visible as project artifacts.
 - Prompt changes can be reviewed without reading application code.
 - The project is easier to explain at exam because each answer mode has its own prompt file.
+
+### 2026-05-07: Added multiple conversation sessions
+
+Reason:
+
+The app previously had one active conversation. For real study use, the user needs to keep separate threads for different subjects and switch between them without losing context.
+
+Change:
+
+Updated:
+
+```text
+app.py
+templates/index.html
+static/app.js
+static/styles.css
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+Conversation runtime storage now uses:
+
+```text
+conversations/index.json
+conversations/sessions/<conversation_id>.json
+```
+
+New backend endpoints:
+
+```text
+GET /conversations
+POST /conversations
+GET /conversation/<conversation_id>
+POST /conversation/<conversation_id>/clear
+```
+
+The frontend now shows a permanent conversation list in a left sidebar. The list remains visible, marks the active conversation, and scrolls when many conversations exist.
+
+Expected benefit:
+
+- Users can separate study topics into different threads.
+- Conversation memory, summary, and archive are scoped per conversation.
+- The UI makes local memory management easier to demonstrate.
+
+### 2026-05-07: Replaced clear conversation with per-conversation archive
+
+Reason:
+
+After adding multiple conversations, a global `Clear conversation` button became less useful. It was clearer to manage conversations directly from the sidebar where they are listed.
+
+Change:
+
+Updated:
+
+```text
+app.py
+templates/index.html
+static/app.js
+static/styles.css
+docs/runbook.md
+docs/user_guide.md
+```
+
+Added:
+
+```text
+DELETE /conversation/<conversation_id>
+```
+
+Each sidebar conversation now has its own archive button. The old clear button was removed from the input area.
+
+Archiving is a soft delete:
+
+```json
+{
+  "archived": true,
+  "archived_at": "..."
+}
+```
+
+Archived conversations are hidden from the normal sidebar list, but their session files remain in `conversations/sessions/`.
+
+Expected benefit:
+
+- Conversation management is attached to the conversation list.
+- Users can hide old study threads without losing the underlying local data.
+- The UI is simpler because the input area focuses on asking questions.
