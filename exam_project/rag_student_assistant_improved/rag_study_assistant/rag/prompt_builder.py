@@ -9,6 +9,14 @@ class PromptBuilder:
         with open(self.template_path, "r", encoding="utf-8") as f:
             self.template = f.read()
 
+    def build_direct_prompt(self, question):
+        """Build a prompt that relies solely on the model's own knowledge."""
+        return (
+            "You are a knowledgeable study assistant. Answer the following question using "
+            "your own knowledge. Be clear, educational, and concise.\n\n"
+            f"Question: {question}\n\nAnswer:"
+        )
+
     def build_prompt(self, context_chunks, question):
         """
         Inserts context and question into the 4T prompt template.

@@ -19,21 +19,29 @@ def index():
 def ask_question():
     data = request.get_json()
     question = data.get("question", "").strip()
+    use_rag = data.get("use_rag", True)
 
     if not question:
         return jsonify({"error": "Question is required"}), 400
 
     try:
+        if not use_rag:
+            prompt_builder = PromptBuilder()
+            prompt = prompt_builder.build_direct_prompt(question)
+            answer = ask_ollama(prompt)
+            return jsonify({
+                "answer": answer[0] if isinstance(answer, tuple) else answer,
+                "citations": []
+            }), 200
+
         if not os.path.exists(INDEX_FILE):
             return jsonify({"error": "No index found. Please run ingestion first."}), 400
 
         chunks = load_index()
         scores = score_chunks(question, chunks)
-        
-        # Sort chunks by score and take top 3
+
         sorted_chunks = sorted(chunks, key=lambda c: scores.get(c['chunk_id'], 0), reverse=True)[:3]
-        
-        # Prepare context for prompt builder
+
         context_chunks = [
             {
                 'content': chunk['content'],
@@ -41,12 +49,11 @@ def ask_question():
             }
             for chunk in sorted_chunks
         ]
-        
+
         prompt_builder = PromptBuilder()
         prompt = prompt_builder.build_prompt(context_chunks, question)
         answer = ask_ollama(prompt)
 
-        # Format retrieved chunks for citations
         retrieved = [
             {
                 'source': chunk['filename'],
@@ -81,4 +88,4 @@ def status_check():
     }), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5500, debug=True)
