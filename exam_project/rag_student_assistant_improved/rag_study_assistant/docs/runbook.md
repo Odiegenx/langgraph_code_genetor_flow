@@ -53,6 +53,8 @@ Output saved to: `site_validation_output.txt`
 - `GET /models` – Return available Ollama models for the UI dropdown
 - `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
 - `GET /status` – Report whether documents and index are available
+- `GET /conversation` – Return persisted local conversation memory
+- `POST /conversation/clear` – Clear persisted local conversation memory
 
 ### Answer modes
 
@@ -87,6 +89,14 @@ Allowed `answer_mode` values:
 ### Index Files
 Generated after running `rag/ingest.py`:
 - `index/chunks.json`: Stores processed text chunks and metadata
+
+### Conversation files
+
+Generated while using the chat:
+
+- `conversations/current_session.json`: Stores the current local conversation.
+
+This is runtime data and should not be committed.
 
 ## Troubleshooting
 

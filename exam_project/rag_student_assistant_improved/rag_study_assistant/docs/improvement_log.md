@@ -226,3 +226,44 @@ Expected benefit:
 - Makes RAG vs model-only vs hybrid behavior explicit.
 - Demonstrates prompt engineering and guardrail design.
 - Keeps the exam project focused on syllabus-relevant LLM concepts.
+
+### 2026-05-07: Added persistent conversation memory
+
+Reason:
+
+The conversation was stored only in browser memory. Refreshing or closing the browser removed the conversation, and backend prompts depended on conversation history sent from the frontend.
+
+Change:
+
+Updated:
+
+```text
+app.py
+static/app.js
+README.md
+docs/runbook.md
+docs/user_guide.md
+.gitignore
+```
+
+The backend now stores the current conversation in:
+
+```text
+conversations/current_session.json
+```
+
+New endpoints:
+
+```text
+GET /conversation
+POST /conversation/clear
+```
+
+`POST /ask` now reads recent conversation messages from the persisted file, appends the user question, appends the assistant answer, and returns the updated conversation to the frontend.
+
+Expected benefit:
+
+- Conversation survives browser refreshes.
+- Backend owns conversation memory instead of trusting frontend state.
+- Creates a clear foundation for a later conversation-summary feature.
+- Keeps conversation memory local and inspectable.

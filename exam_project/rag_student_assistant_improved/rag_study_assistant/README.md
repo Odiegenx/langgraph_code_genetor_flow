@@ -18,6 +18,7 @@ docs/user_guide.md
 - **Source Citations**: Answers always include references to original documents
 - **Answer Modes**: Supports RAG only, model only, and hybrid answers
 - **Conversation UI**: Supports follow-up questions with short browser-side history
+- **Persistent Local Conversation**: Stores the current conversation in a local runtime JSON file
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 
 ## Prerequisites
@@ -101,6 +102,7 @@ rag_study_assistant/
 │   └── rag_4t_prompt.md     # 4T prompt template
 ├── documents/               # Your course notes go here
 ├── index/                   # Generated index files
+├── conversations/           # Runtime conversation memory, ignored by git
 ├── static/                  # Frontend assets
 ├── templates/               # HTML templates
 ├── docs/                    # Documentation

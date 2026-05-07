@@ -10,7 +10,7 @@ The application first searches the user's local documents, selects relevant text
 
 The goal is to make answers grounded in the student's own notes and course files.
 
-The UI also keeps a short conversation history in the browser and sends recent messages with each question. This supports follow-up questions without adding a database.
+The app keeps a persistent local conversation history in `conversations/current_session.json`. This supports follow-up questions and allows the conversation to survive browser refreshes.
 
 ## Application flow
 
@@ -203,6 +203,32 @@ The result is written to:
 ```text
 site_validation_output.txt
 ```
+
+## Conversation memory
+
+The current conversation is stored locally in:
+
+```text
+conversations/current_session.json
+```
+
+The file contains:
+
+- `summary`: currently reserved for future summary support
+- `messages`: user and assistant messages
+
+The app uses recent persisted messages as short-term conversation context when building prompts.
+
+Conversation endpoints:
+
+```text
+GET /conversation
+POST /conversation/clear
+```
+
+The `Clear conversation` button clears the persisted session file.
+
+The `conversations/` folder is runtime data and is ignored by git.
 
 ## Troubleshooting
 

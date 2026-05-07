@@ -11,10 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loading = document.getElementById('loading');
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
-    const conversation = [];
+    let conversation = [];
 
     updateModels();
     updateStatus();
+    loadConversation();
 
     submitButton.addEventListener('click', async () => {
         const question = questionInput.value.trim();
@@ -23,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setLoading(true);
         answerSection.classList.remove('hidden');
         const answerMode = answerModeSelect.value;
-        appendMessage('user', question);
         sourcesList.innerHTML = '';
 
         try {
@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     question,
                     model: modelSelect.value,
-                    answer_mode: answerMode,
-                    conversation: conversation.slice(-6)
+                    answer_mode: answerMode
                 })
 
             });
@@ -43,12 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                appendMessage(
-                    'assistant',
-                    data.answer || 'No answer returned.',
-                    data.model,
-                    data.answer_mode || answerMode
-                );
+                renderConversation(data.conversation && data.conversation.messages
+                    ? data.conversation.messages
+                    : []);
                 questionInput.value = '';
 
                 const sourcesHeading = document.querySelector('#answer-section h3');
@@ -65,21 +61,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     sourcesList.classList.add('hidden');
                 }
             } else {
-                appendMessage('assistant', `Error: ${data.error || 'Failed to get response'}`);
+                renderTransientMessage('assistant', `Error: ${data.error || 'Failed to get response'}`);
             }
         } catch (err) {
-            appendMessage('assistant', `Network error: ${err.message}`);
+            renderTransientMessage('assistant', `Network error: ${err.message}`);
         } finally {
             setLoading(false);
             updateStatus();
         }
     });
 
-    clearChatButton.addEventListener('click', () => {
-        conversation.length = 0;
-        conversationList.innerHTML = '';
-        sourcesList.innerHTML = '';
-        answerSection.classList.add('hidden');
+    clearChatButton.addEventListener('click', async () => {
+        setLoading(true, 'Clearing conversation...');
+        try {
+            const response = await fetch('/conversation/clear', { method: 'POST' });
+            const data = await response.json();
+            renderConversation(data.messages || []);
+            sourcesList.innerHTML = '';
+            answerSection.classList.add('hidden');
+        } catch (err) {
+            renderTransientMessage('assistant', `Could not clear conversation: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
     });
 
     ingestButton.addEventListener('click', async () => {
@@ -90,11 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/ingest', { method: 'POST' });
             const data = await response.json();
-            appendMessage('assistant', response.ok
+            renderTransientMessage('assistant', response.ok
                 ? data.message || 'Ingestion completed.'
                 : `Ingestion failed: ${data.error || 'Unknown error'}`);
         } catch (err) {
-            appendMessage('assistant', `Network error: ${err.message}`);
+            renderTransientMessage('assistant', `Network error: ${err.message}`);
         } finally {
             setLoading(false);
             updateStatus();
@@ -141,6 +145,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadConversation() {
+        try {
+            const response = await fetch('/conversation');
+            const data = await response.json();
+            renderConversation(data.messages || []);
+        } catch (err) {
+            renderTransientMessage('assistant', `Could not load conversation: ${err.message}`);
+        }
+    }
+
     function setLoading(isLoading, message = '⏳ Processing your question...') {
         loading.textContent = message;
         loading.classList.toggle('hidden', !isLoading);
@@ -151,10 +165,31 @@ document.addEventListener('DOMContentLoaded', () => {
         answerModeSelect.disabled = isLoading;
     }
 
-    function appendMessage(role, content, model = null, answerMode = null) {
-        conversation.push({ role, content });
-        answerSection.classList.remove('hidden');
+    function renderConversation(messages) {
+        conversation = messages;
+        conversationList.innerHTML = '';
+        if (!conversation.length) {
+            answerSection.classList.add('hidden');
+            return;
+        }
 
+        answerSection.classList.remove('hidden');
+        conversation.forEach(message => {
+            appendMessageElement(
+                message.role,
+                message.content,
+                message.model,
+                message.answer_mode
+            );
+        });
+    }
+
+    function renderTransientMessage(role, content) {
+        answerSection.classList.remove('hidden');
+        appendMessageElement(role, content);
+    }
+
+    function appendMessageElement(role, content, model = null, answerMode = null) {
         const message = document.createElement('article');
         message.className = `chat-message ${role}`;
 

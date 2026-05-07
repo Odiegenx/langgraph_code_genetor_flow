@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import json
+from datetime import datetime, timezone
 from rag.ingest import process_documents
 from rag.retrieve import score_chunks, load_index
 from rag.prompt_builder import PromptBuilder
@@ -10,7 +11,77 @@ app = Flask(__name__)
 
 INDEX_FILE = "index/chunks.json"
 DOCUMENTS_DIR = "documents/"
+CONVERSATION_DIR = "conversations"
+CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
 VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
+
+def utc_now_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+def empty_conversation():
+    return {
+        "summary": "",
+        "messages": []
+    }
+
+def load_conversation():
+    if not os.path.exists(CONVERSATION_FILE):
+        return empty_conversation()
+
+    try:
+        with open(CONVERSATION_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return empty_conversation()
+
+    if not isinstance(data, dict):
+        return empty_conversation()
+
+    messages = data.get("messages", [])
+    if not isinstance(messages, list):
+        messages = []
+
+    return {
+        "summary": str(data.get("summary", "")),
+        "messages": [
+            message for message in messages
+            if isinstance(message, dict)
+        ]
+    }
+
+def save_conversation(conversation):
+    os.makedirs(CONVERSATION_DIR, exist_ok=True)
+    with open(CONVERSATION_FILE, "w", encoding="utf-8") as f:
+        json.dump(conversation, f, indent=2, ensure_ascii=False)
+
+def clear_conversation_file():
+    save_conversation(empty_conversation())
+
+def append_conversation_message(role, content, **metadata):
+    conversation = load_conversation()
+    message = {
+        "role": role,
+        "content": str(content),
+        "timestamp": utc_now_iso()
+    }
+    message.update({
+        key: value for key, value in metadata.items()
+        if value is not None
+    })
+    conversation["messages"].append(message)
+    save_conversation(conversation)
+    return conversation
+
+def recent_prompt_messages(conversation, limit=6):
+    messages = conversation.get("messages", [])
+    return [
+        {
+            "role": message.get("role", "user"),
+            "content": str(message.get("content", ""))[:1200]
+        }
+        for message in messages[-limit:]
+        if isinstance(message, dict)
+    ]
 
 @app.route("/")
 def index():
@@ -37,32 +108,38 @@ def ask_question():
         if answer_mode not in VALID_ANSWER_MODES:
             return jsonify({"error": "answer_mode must be one of: rag, model, hybrid"}), 400
 
-        conversation = data.get("conversation", [])
-        if not isinstance(conversation, list):
-            return jsonify({"error": "conversation must be a list"}), 400
-        safe_conversation = [
-            {
-                "role": message.get("role", "user"),
-                "content": str(message.get("content", ""))[:1200]
-            }
-            for message in conversation[-6:]
-            if isinstance(message, dict)
-        ]
-
         if not question:
             return jsonify({"error": "Question is required"}), 400
 
+        persisted_conversation = load_conversation()
+        safe_conversation = recent_prompt_messages(persisted_conversation)
         prompt_builder = PromptBuilder()
+        append_conversation_message(
+            "user",
+            question,
+            model=selected_model or get_model(),
+            answer_mode=answer_mode
+        )
 
         if answer_mode == "model":
             prompt = prompt_builder.build_direct_prompt(question, conversation=safe_conversation)
             answer = ask_ollama(prompt, model=selected_model)
+            answer_text = answer[0] if isinstance(answer, tuple) else answer
+            updated_conversation = append_conversation_message(
+                "assistant",
+                answer_text,
+                model=selected_model or get_model(),
+                answer_mode="model",
+                use_rag=False,
+                citations=[]
+            )
             return jsonify({
-                "answer": answer[0] if isinstance(answer, tuple) else answer,
+                "answer": answer_text,
                 "citations": [],
                 "model": selected_model or get_model(),
                 "answer_mode": "model",
-                "use_rag": False
+                "use_rag": False,
+                "conversation": updated_conversation
             }), 200
 
         if not os.path.exists(INDEX_FILE):
@@ -94,6 +171,7 @@ def ask_question():
                 conversation=safe_conversation
             )
         answer = ask_ollama(prompt, model=selected_model)
+        answer_text = answer[0] if isinstance(answer, tuple) else answer
 
         retrieved = [
             {
@@ -103,17 +181,35 @@ def ask_question():
             }
             for chunk in sorted_chunks
         ]
+        updated_conversation = append_conversation_message(
+            "assistant",
+            answer_text,
+            model=selected_model or get_model(),
+            answer_mode=answer_mode,
+            use_rag=True,
+            citations=retrieved
+        )
 
         return jsonify({
-            "answer": answer[0] if isinstance(answer, tuple) else answer,
+            "answer": answer_text,
             "citations": retrieved,
             "model": selected_model or get_model(),
             "answer_mode": answer_mode,
-            "use_rag": True
+            "use_rag": True,
+            "conversation": updated_conversation
         }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/conversation", methods=["GET"])
+def conversation():
+    return jsonify(load_conversation()), 200
+
+@app.route("/conversation/clear", methods=["POST"])
+def clear_conversation():
+    clear_conversation_file()
+    return jsonify(load_conversation()), 200
     
 @app.route("/models", methods=["GET"])
 def models():
