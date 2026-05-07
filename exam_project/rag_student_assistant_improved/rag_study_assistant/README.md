@@ -19,7 +19,7 @@ docs/user_guide.md
 - **Answer Modes**: Supports RAG only, model only, and hybrid answers
 - **Conversation UI**: Supports follow-up questions with short browser-side history
 - **Persistent Local Conversation**: Stores the current conversation in a local runtime JSON file
-- **Conversation Summary**: Compresses older messages when the conversation grows
+- **Conversation Summary + Archive**: Compresses older messages for prompts, caps summary size, and keeps an exact local archive
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 
 ## Prerequisites
@@ -100,7 +100,11 @@ rag_study_assistant/
 │   ├── prompt_builder.py    # 4T prompt construction
 │   └── ollama_client.py     # Ollama API client
 ├── prompts/
-│   └── rag_4t_prompt.md     # 4T prompt template
+│   ├── rag_4t_prompt.md     # RAG-only 4T prompt template
+│   ├── direct_answer_prompt.md
+│   ├── hybrid_answer_prompt.md
+│   ├── rag_answer_addendum.md
+│   └── summary_prompt.md
 ├── documents/               # Your course notes go here
 ├── index/                   # Generated index files
 ├── conversations/           # Runtime conversation memory, ignored by git

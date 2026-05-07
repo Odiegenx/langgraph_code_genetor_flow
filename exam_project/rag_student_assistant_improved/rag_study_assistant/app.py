@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import os
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from rag.ingest import process_documents
 from rag.retrieve import score_chunks, load_index
 from rag.prompt_builder import PromptBuilder
@@ -13,10 +14,12 @@ INDEX_FILE = "index/chunks.json"
 DOCUMENTS_DIR = "documents/"
 CONVERSATION_DIR = "conversations"
 CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
+SUMMARY_PROMPT_FILE = Path("prompts/summary_prompt.md")
 VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
 RECENT_MESSAGE_LIMIT = 6
 SUMMARY_TRIGGER_MESSAGES = 10
 SUMMARY_TIMEOUT_SECONDS = 240
+SUMMARY_MAX_CHARS = 6000
 
 def utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -24,6 +27,7 @@ def utc_now_iso():
 def empty_conversation():
     return {
         "summary": "",
+        "archive": [],
         "messages": []
     }
 
@@ -44,8 +48,16 @@ def load_conversation():
     if not isinstance(messages, list):
         messages = []
 
+    archive = data.get("archive", [])
+    if not isinstance(archive, list):
+        archive = []
+
     return {
         "summary": str(data.get("summary", "")),
+        "archive": [
+            message for message in archive
+            if isinstance(message, dict)
+        ],
         "messages": [
             message for message in messages
             if isinstance(message, dict)
@@ -71,9 +83,20 @@ def append_conversation_message(role, content, **metadata):
         key: value for key, value in metadata.items()
         if value is not None
     })
+    conversation.setdefault("archive", [])
+    conversation.setdefault("messages", [])
     conversation["messages"].append(message)
     save_conversation(conversation)
     return conversation
+
+def conversation_response(conversation):
+    response = dict(conversation)
+    response["archive"] = list(conversation.get("archive", []))
+    response["messages"] = list(conversation.get("messages", []))
+    response["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
+    response["active_message_count"] = len(response["messages"])
+    response["archive_message_count"] = len(response["archive"])
+    return response
 
 def recent_prompt_messages(conversation, limit=6):
     messages = conversation.get("messages", [])
@@ -95,25 +118,32 @@ def format_messages_for_summary(messages):
             lines.append(f"{role}: {content}")
     return "\n".join(lines)
 
+def load_text_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+def fill_text_template(template, **values):
+    output = template
+    for key, value in values.items():
+        output = output.replace(f"{{{key}}}", str(value))
+    return output
+
 def build_summary_prompt(existing_summary, older_messages):
-    return (
-        "Summarize this conversation for future context in a local study assistant.\n\n"
-        "Preserve:\n"
-        "- the user's learning goals\n"
-        "- important facts already discussed\n"
-        "- unresolved questions\n"
-        "- decisions or preferences that matter for future answers\n\n"
-        "Rules:\n"
-        "- Do not add new facts.\n"
-        "- Do not invent sources.\n"
-        "- Keep it concise.\n"
-        "- This summary is memory only, not evidence.\n\n"
-        "Existing summary:\n"
-        f"{existing_summary or 'No existing summary.'}\n\n"
-        "Messages to merge into the summary:\n"
-        f"{format_messages_for_summary(older_messages)}\n\n"
-        "Updated summary:"
+    return fill_text_template(
+        load_text_file(SUMMARY_PROMPT_FILE),
+        summary_max_chars=SUMMARY_MAX_CHARS,
+        existing_summary=existing_summary or "No existing summary.",
+        messages_to_merge=format_messages_for_summary(older_messages)
     )
+
+def clamp_summary(summary_text):
+    summary = str(summary_text).strip()
+    if len(summary) <= SUMMARY_MAX_CHARS:
+        return summary
+
+    suffix = "\n[Summary truncated.]"
+    trimmed = summary[:SUMMARY_MAX_CHARS - len(suffix)].rstrip()
+    return f"{trimmed}{suffix}"
 
 def summarize_if_needed(conversation, model=None):
     messages = conversation.get("messages", [])
@@ -140,7 +170,8 @@ def summarize_if_needed(conversation, model=None):
         return conversation
 
     summarized_conversation = {
-        "summary": summary_text.strip(),
+        "summary": clamp_summary(summary_text),
+        "archive": conversation.get("archive", []) + older_messages,
         "messages": recent_messages
     }
     save_conversation(summarized_conversation)
@@ -213,7 +244,7 @@ def ask_question():
                 "model": selected_model or get_model(),
                 "answer_mode": "model",
                 "use_rag": False,
-                "conversation": updated_conversation
+                "conversation": conversation_response(updated_conversation)
             }), 200
 
         if not os.path.exists(INDEX_FILE):
@@ -272,7 +303,7 @@ def ask_question():
             "model": selected_model or get_model(),
             "answer_mode": answer_mode,
             "use_rag": True,
-            "conversation": updated_conversation
+            "conversation": conversation_response(updated_conversation)
         }), 200
 
     except Exception as e:
@@ -281,15 +312,13 @@ def ask_question():
 @app.route("/conversation", methods=["GET"])
 def conversation():
     conversation_data = load_conversation()
-    conversation_data["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
-    return jsonify(conversation_data), 200
+    return jsonify(conversation_response(conversation_data)), 200
 
 @app.route("/conversation/clear", methods=["POST"])
 def clear_conversation():
     clear_conversation_file()
     conversation_data = load_conversation()
-    conversation_data["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
-    return jsonify(conversation_data), 200
+    return jsonify(conversation_response(conversation_data)), 200
 
 @app.route("/conversation/summarize", methods=["POST"])
 def summarize_conversation():
@@ -299,8 +328,7 @@ def summarize_conversation():
         load_conversation(),
         model=selected_model
     )
-    conversation["summary_trigger_messages"] = SUMMARY_TRIGGER_MESSAGES
-    return jsonify(conversation), 200
+    return jsonify(conversation_response(conversation)), 200
     
 @app.route("/models", methods=["GET"])
 def models():

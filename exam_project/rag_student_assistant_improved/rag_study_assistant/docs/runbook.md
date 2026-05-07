@@ -85,7 +85,15 @@ Allowed `answer_mode` values:
 - Default LLM model: Editable in `rag/ollama_client.py` or config/environment variable
 - Runtime model selection: available through the browser dropdown when Ollama responds to `/api/tags`
 - Chunk size and overlap: Defined in `rag/ingest.py`
-- Prompt path: Located at `prompts/rag_4t_prompt.md`
+- Prompt templates: Located in `prompts/`
+
+Runtime prompt files:
+
+- `prompts/rag_4t_prompt.md`: RAG-only 4T prompt
+- `prompts/rag_answer_addendum.md`: RAG conversation memory and guardrails
+- `prompts/direct_answer_prompt.md`: model-only answer prompt
+- `prompts/hybrid_answer_prompt.md`: hybrid RAG + model knowledge prompt
+- `prompts/summary_prompt.md`: conversation memory compression prompt
 
 ### Index Files
 Generated after running `rag/ingest.py`:
@@ -99,18 +107,22 @@ Generated while using the chat:
 
 This is runtime data and should not be committed.
 
-The file has two main fields:
+The file has three main fields:
 
 - `summary`: compressed memory from older messages
-- `messages`: recent messages kept verbatim
+- `archive`: exact older messages that have already been summarized
+- `messages`: recent active messages kept verbatim
 
 The summary is not a document source. It is only used as conversation memory.
+
+The model receives `summary` plus recent `messages`. It does not receive the full `archive` on each request, which keeps prompt size and answer time under control while preserving the full chat history locally.
 
 Summary behavior:
 
 - automatic summary starts when the stored conversation has more than 10 messages
-- older messages are compressed into `summary`
+- older active messages are compressed into `summary` and moved to `archive`
 - the latest 6 messages are kept verbatim
+- saved summaries are capped at 6000 characters
 - summary calls use a longer Ollama timeout than normal answer calls
 
 ## Troubleshooting

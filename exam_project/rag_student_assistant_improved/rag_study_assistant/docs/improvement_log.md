@@ -351,3 +351,112 @@ Expected benefit:
 - The user can see why a request may take longer.
 - Summary has more time to complete on slower local/cloud models.
 - Normal answers are not forced to use the longer timeout.
+
+### 2026-05-07: Added archived conversation memory
+
+Reason:
+
+The first summary implementation compressed older messages into `summary` and kept only the latest messages. This controlled prompt size, but the exact older messages were no longer preserved after summarization.
+
+Change:
+
+Updated:
+
+```text
+app.py
+static/app.js
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+Conversation storage now uses:
+
+```text
+summary  - compressed memory sent to the model
+archive  - exact older messages kept locally
+messages - recent active messages sent to the model
+```
+
+The frontend renders `archive + messages`, so the user can still see the full conversation. The backend only sends `summary + messages` to the model.
+
+Expected benefit:
+
+- Older conversation is no longer lost after summary.
+- Prompt size stays controlled because archive is not sent every time.
+- The storage format is easier to explain: full local history is preserved, but model context is compressed.
+
+### 2026-05-07: Added maximum summary size
+
+Reason:
+
+The conversation summary can also grow over time if many messages are summarized repeatedly. If it grows too large, it can recreate the same context-window and latency problem that summary was meant to solve.
+
+Change:
+
+Updated:
+
+```text
+app.py
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+The backend now defines:
+
+```text
+SUMMARY_MAX_CHARS = 6000
+```
+
+The summary prompt asks the model to keep the updated summary under that limit. The backend then enforces the limit before saving the summary.
+
+Expected benefit:
+
+- Summary memory remains bounded.
+- Prompt size stays predictable during long conversations.
+- Exact older messages are still preserved in `archive`, so truncating summary does not delete the raw local conversation history.
+
+### 2026-05-07: Moved runtime prompts into prompt files
+
+Reason:
+
+Prompt engineering is a central exam topic. Some runtime prompts were still embedded directly in Python code, which made them harder to inspect, discuss, and improve.
+
+Change:
+
+Created:
+
+```text
+prompts/direct_answer_prompt.md
+prompts/hybrid_answer_prompt.md
+prompts/rag_answer_addendum.md
+prompts/summary_prompt.md
+```
+
+Updated:
+
+```text
+app.py
+rag/prompt_builder.py
+validate_project.py
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+The Python code now loads Markdown prompt templates and fills placeholders such as:
+
+```text
+{context}
+{question}
+{conversation_summary}
+{conversation_history}
+{summary_max_chars}
+```
+
+Expected benefit:
+
+- Prompt engineering is visible as project artifacts.
+- Prompt changes can be reviewed without reading application code.
+- The project is easier to explain at exam because each answer mode has its own prompt file.

@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
     let conversation = [];
+    let activeMessageCount = 0;
     let summaryTriggerMessages = 10;
 
     updateModels();
@@ -22,12 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const question = questionInput.value.trim();
         if (!question) return;
 
-        const willSummarize = conversation.length > summaryTriggerMessages;
+        const willSummarize = activeMessageCount > summaryTriggerMessages;
         setLoading(
             true,
             willSummarize
-                ? '⏳ Summarizing older conversation, then answering...'
-                : '⏳ Processing your question...'
+                ? 'Summarizing older conversation, then answering...'
+                : 'Processing your question...'
         );
         answerSection.classList.remove('hidden');
         const answerMode = answerModeSelect.value;
@@ -49,9 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                renderConversation(data.conversation && data.conversation.messages
-                    ? data.conversation.messages
-                    : []);
+                renderConversationPayload(data.conversation || {});
                 questionInput.value = '';
 
                 const sourcesHeading = document.querySelector('#answer-section h3');
@@ -83,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/conversation/clear', { method: 'POST' });
             const data = await response.json();
-            renderConversation(data.messages || []);
+            renderConversationPayload(data);
             sourcesList.innerHTML = '';
             answerSection.classList.add('hidden');
         } catch (err) {
@@ -156,16 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/conversation');
             const data = await response.json();
-            if (typeof data.summary_trigger_messages === 'number') {
-                summaryTriggerMessages = data.summary_trigger_messages;
-            }
-            renderConversation(data.messages || []);
+            renderConversationPayload(data);
         } catch (err) {
             renderTransientMessage('assistant', `Could not load conversation: ${err.message}`);
         }
     }
 
-    function setLoading(isLoading, message = '⏳ Processing your question...') {
+    function setLoading(isLoading, message = 'Processing your question...') {
         loading.textContent = message;
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
@@ -173,6 +169,21 @@ document.addEventListener('DOMContentLoaded', () => {
         ingestButton.disabled = isLoading;
         modelSelect.disabled = isLoading;
         answerModeSelect.disabled = isLoading;
+    }
+
+    function renderConversationPayload(data) {
+        if (typeof data.summary_trigger_messages === 'number') {
+            summaryTriggerMessages = data.summary_trigger_messages;
+        }
+
+        activeMessageCount = typeof data.active_message_count === 'number'
+            ? data.active_message_count
+            : (data.messages || []).length;
+
+        renderConversation([
+            ...(data.archive || []),
+            ...(data.messages || [])
+        ]);
     }
 
     function renderConversation(messages) {

@@ -170,6 +170,16 @@ The 4T prompt is stored here:
 prompts/rag_4t_prompt.md
 ```
 
+All main runtime prompts are stored in `prompts/` so they can be inspected and discussed directly:
+
+```text
+prompts/rag_4t_prompt.md
+prompts/rag_answer_addendum.md
+prompts/direct_answer_prompt.md
+prompts/hybrid_answer_prompt.md
+prompts/summary_prompt.md
+```
+
 It contains:
 
 - Traits: how the assistant should behave.
@@ -189,6 +199,8 @@ The app inserts:
 `{question}` is filled with the user's question from the web UI.
 
 For hybrid mode, `rag/prompt_builder.py` adds guardrails that require document-based information and model knowledge to be separated.
+
+`rag/prompt_builder.py` is responsible for loading prompt templates and filling placeholders such as `{context}`, `{question}`, `{conversation_summary}`, and `{conversation_history}`. The prompt instructions themselves live in Markdown files, not directly in Python code.
 
 ## Validation
 
@@ -214,12 +226,13 @@ conversations/current_session.json
 
 The file contains:
 
-- `summary`: currently reserved for future summary support
-- `messages`: user and assistant messages
+- `summary`: compressed memory from older messages
+- `archive`: exact older messages that have already been compressed
+- `messages`: recent user and assistant messages kept as active prompt context
 
 The app uses recent persisted messages as short-term conversation context when building prompts.
 
-When the conversation becomes long, older messages are compressed into `summary`. The prompt then receives:
+When the conversation becomes long, older active messages are compressed into `summary` and moved to `archive`. The prompt then receives:
 
 ```text
 conversation summary
@@ -227,7 +240,11 @@ recent messages
 current question
 ```
 
+The `archive` field keeps the older exact messages locally so the chat history is not lost, but those archived messages are not sent to the model on every question. This keeps the prompt smaller while preserving an inspectable full history.
+
 The summary is only memory of the dialogue. It is not a document source and must not be cited as evidence.
+
+The summary is capped at 6000 characters. The summary prompt asks the model to stay under that limit, and the backend truncates the saved summary if the model still returns a longer result.
 
 When summary is about to happen, the UI shows:
 
@@ -297,7 +314,7 @@ Try:
 - `rag/retrieve.py`: scores and selects relevant chunks.
 - `rag/prompt_builder.py`: builds the final 4T RAG prompt.
 - `rag/ollama_client.py`: sends prompts to Ollama.
-- `prompts/rag_4t_prompt.md`: 4T prompt template.
+- `prompts/`: prompt templates for RAG, model-only, hybrid, and summary behavior.
 - `static/app.js`: browser-side behavior.
 - `templates/index.html`: main page.
 - `validate_project.py`: project sanity check.
