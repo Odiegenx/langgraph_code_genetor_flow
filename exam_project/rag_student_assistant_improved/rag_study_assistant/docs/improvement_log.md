@@ -144,6 +144,41 @@ Expected benefit:
 - The exam app can be treated as a self-contained project.
 - Setup commands are easier to understand.
 - Users avoid accidentally calling the wrong `python.exe`.
+
+### 2026-05-07: Verified and fixed RAG toggle behavior
+
+Reason:
+
+A teammate added a UI option for answering with or without RAG. A smoke test showed that the no-RAG path worked, but it ignored the model selected in the UI and fell back to the default model.
+
+Change:
+
+Updated:
+
+```text
+app.py
+```
+
+The no-RAG path now calls:
+
+```python
+ask_ollama(prompt, model=selected_model)
+```
+
+Both RAG and no-RAG responses now include:
+
+```json
+{
+  "model": "selected-model",
+  "use_rag": true
+}
+```
+
+Expected benefit:
+
+- Model selection works consistently whether RAG is enabled or disabled.
+- The frontend can show which model was used for the answer.
+- The API response makes it explicit whether the answer used document retrieval.
 docs/improvement_log.md
 ```
 

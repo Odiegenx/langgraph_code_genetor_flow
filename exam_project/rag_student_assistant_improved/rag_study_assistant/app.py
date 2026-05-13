@@ -19,6 +19,7 @@ def allowed_file(filename):
 @app.route("/")
 def index():
     return render_template("index.html")
+
 @app.route("/ask", methods=["POST"])
 def ask_question():
     try:
@@ -26,7 +27,6 @@ def ask_question():
         if not isinstance(data, dict):
             return jsonify({"error": "Request body must be a valid JSON object"}), 400
 
-        question = data.get("question", "").strip()
         selected_model = data.get("model", "").strip() or None
 
         question = data.get("question", "")
@@ -54,10 +54,12 @@ def ask_question():
         if not use_rag:
             prompt_builder = PromptBuilder()
             prompt = prompt_builder.build_direct_prompt(question)
-            answer = ask_ollama(prompt)
+            answer = ask_ollama(prompt, model=selected_model)
             return jsonify({
                 "answer": answer[0] if isinstance(answer, tuple) else answer,
-                "citations": []
+                "citations": [],
+                "model": selected_model or get_model(),
+                "use_rag": False
             }), 200
 
         if not os.path.exists(INDEX_FILE):
@@ -92,7 +94,8 @@ def ask_question():
         return jsonify({
             "answer": answer[0] if isinstance(answer, tuple) else answer,
             "citations": retrieved,
-            "model": selected_model or get_model()
+            "model": selected_model or get_model(),
+            "use_rag": True
         }), 200
 
     except Exception as e:
