@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modelSelect = document.getElementById('model-select');
     const submitButton = document.getElementById('submit-btn');
     const ingestButton = document.getElementById('ingest-btn');
+    const uploadButton = document.getElementById('upload-btn');
+    const closeUploadButton = document.getElementById('close-upload-btn');
+    const uploadSection = document.getElementById('upload-section');
     const answerSection = document.getElementById('answer-section');
     const answerContent = document.getElementById('answer-content');
     const sourcesList = document.getElementById('sources-list');
@@ -20,6 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateModels();
     updateStatus();
     initializeUpload();
+
+    uploadButton.addEventListener('click', () => {
+        uploadSection.classList.toggle('hidden');
+    });
+
+    closeUploadButton.addEventListener('click', () => {
+        uploadSection.classList.add('hidden');
+    });
 
     submitButton.addEventListener('click', async () => {
         const question = questionInput.value.trim();
@@ -140,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
         ingestButton.disabled = isLoading;
+        uploadButton.disabled = isLoading;
         modelSelect.disabled = isLoading;
     }
 
@@ -194,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('files', file);
         }
 
-        setLoading(true, '📤 Uploading files...');
+        setLoading(true, 'Uploading files...');
         showUploadStatus('Uploading files...', 'info');
 
         try {

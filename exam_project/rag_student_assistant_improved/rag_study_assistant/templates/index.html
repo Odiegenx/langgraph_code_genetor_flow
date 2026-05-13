@@ -13,16 +13,23 @@
     </header>
 
     <main>
-        <section id="upload-section">
-            <h2>📁 Upload Documents</h2>
-            <div id="drop-zone" class="drop-zone">
-                <div class="drop-zone-content">
-                    <p>📄 Drag and drop files here or <span class="upload-link">click to browse</span></p>
-                    <p class="file-types">Supported: PDF, TXT, DOCX</p>
+        <section id="upload-section" class="modal hidden">
+            <div class="modal-content">
+                <button id="close-upload-btn" type="button" class="modal-close">×</button>
+
+                <h2>Upload Documents</h2>
+
+                 <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <p>Drag and drop files here or <span class="upload-link">click to browse</span></p>
+                        <p class="file-types">Supported: PDF, TXT, DOCX</p>
+                    </div>
+
+                    <input type="file" id="file-input" multiple accept=".pdf,.txt,.docx" style="display: none;">
                 </div>
-                <input type="file" id="file-input" multiple accept=".pdf,.txt,.docx" style="display: none;">
+
+                <div id="upload-status" class="hidden"></div>
             </div>
-            <div id="upload-status" class="hidden"></div>
         </section>
 
         <section id="input-section">
@@ -40,6 +47,7 @@
             </div>
             <button id="submit-btn">Submit Question</button>
             <button id="ingest-btn" type="button">Re-ingest documents</button>
+            <button id="upload-btn" type="button">Upload documents</button>
             <div id="loading" class="hidden">⏳ Processing your question...</div>
         </section>
 
