@@ -166,6 +166,92 @@ footer {
   color: #7f8c8d;
 }
 
+/* Upload Section Styles */
+.drop-zone {
+  border: 2px dashed #3498db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: #2980b9;
+  background-color: #e3f2fd;
+}
+
+.drop-zone-content p {
+  margin: 0.5rem 0;
+  color: #2c3e50;
+}
+
+.upload-link {
+  color: #3498db;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.file-types {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+#upload-status {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+#upload-status.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#upload-status.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 720px;
+    background: white;
+    padding: 28px;
+    border-radius: 8px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: none;
+    background: transparent;
+    color: #333;
+    font-size: 24px;
+    cursor: pointer;
+}
+
 @media (max-width: 600px) {
   main {
     padding: 0 0.5rem;
@@ -178,5 +264,9 @@ footer {
   button {
     width: 100%;
     padding: 1rem;
+  }
+
+  .drop-zone {
+    padding: 1.5rem;
   }
 }

@@ -3,16 +3,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const modelSelect = document.getElementById('model-select');
     const submitButton = document.getElementById('submit-btn');
     const ingestButton = document.getElementById('ingest-btn');
+    const uploadButton = document.getElementById('upload-btn');
+    const closeUploadButton = document.getElementById('close-upload-btn');
+    const uploadSection = document.getElementById('upload-section');
     const answerSection = document.getElementById('answer-section');
     const answerContent = document.getElementById('answer-content');
     const sourcesList = document.getElementById('sources-list');
     const loading = document.getElementById('loading');
     const ollamaStatus = document.getElementById('ollama-status');
     const indexStatus = document.getElementById('index-status');
+    
+    // Upload elements
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadStatus = document.getElementById('upload-status');
+
     const useRagCheckbox = document.getElementById('use-rag-checkbox');
 
     updateModels();
     updateStatus();
+    initializeUpload();
+
+    uploadButton.addEventListener('click', () => {
+        uploadSection.classList.toggle('hidden');
+    });
+
+    closeUploadButton.addEventListener('click', () => {
+        uploadSection.classList.add('hidden');
+    });
 
     submitButton.addEventListener('click', async () => {
         const question = questionInput.value.trim();
@@ -133,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loading.classList.toggle('hidden', !isLoading);
         submitButton.disabled = isLoading;
         ingestButton.disabled = isLoading;
+        uploadButton.disabled = isLoading;
         modelSelect.disabled = isLoading;
     }
 
@@ -144,6 +163,88 @@ document.addEventListener('DOMContentLoaded', () => {
             '"': '&quot;',
             "'": '&#039;'
         }[char]));
+    }
+
+    function initializeUpload() {
+        // Click to browse files
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                uploadFiles(e.target.files);
+            }
+        });
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadFiles(files);
+            }
+        });
+    }
+
+    async function uploadFiles(files) {
+        const formData = new FormData();
+        
+        // Add files to form data
+        for (let file of files) {
+            formData.append('files', file);
+        }
+
+        setLoading(true, 'Uploading files...');
+        showUploadStatus('Uploading files...', 'info');
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showUploadStatus(data.message, 'success');
+                // Clear file input
+                fileInput.value = '';
+                // Update status to reflect new documents
+                setTimeout(updateStatus, 1000);
+            } else {
+                showUploadStatus(`Upload failed: ${data.error}`, 'error');
+            }
+        } catch (err) {
+            showUploadStatus(`Upload error: ${err.message}`, 'error');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function showUploadStatus(message, type) {
+        uploadStatus.textContent = message;
+        uploadStatus.className = type === 'success' ? 'success' : 
+                                 type === 'error' ? 'error' : '';
+        uploadStatus.classList.remove('hidden');
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                uploadStatus.classList.add('hidden');
+            }, 5000);
+        }
     }
 
     setInterval(updateStatus, 10000);
