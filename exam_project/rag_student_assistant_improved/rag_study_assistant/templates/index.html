@@ -40,25 +40,6 @@
             </div>
         </section>
 
-        <section id="input-section">
-            <h2> Ask Questions</h2>
-            <label for="model-select">Model</label>
-            <select id="model-select">
-                <option value="">Loading models...</option>
-            </select>
-            <textarea id="question-input" placeholder="Enter your question here..."></textarea>
-            <div id="rag-toggle">
-                <label>
-                    <input type="checkbox" id="use-rag-checkbox" checked>
-                    Use RAG (answer from your documents)
-                </label>
-            </div>
-            <button id="submit-btn">Submit Question</button>
-            <button id="ingest-btn" type="button">Re-ingest documents</button>
-            <button id="upload-btn" type="button">Upload documents</button>
-            <div id="loading" class="hidden">⏳ Processing your question...</div>
-        </section>
-
         <div class="workspace">
             <section id="answer-section" class="hidden">
                 <h2>Conversation</h2>
@@ -72,7 +53,7 @@
 
                 <button id="submit-btn">Submit Question</button>
                 <button id="ingest-btn" type="button">Re-ingest documents</button>
-
+                <button id="upload-btn" type="button">Upload documents</button>
                 <div class="control-grid">
                     <div>
                         <label for="model-select">Model</label>
