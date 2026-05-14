@@ -56,16 +56,21 @@ class PromptBuilder:
             for chunk in context_chunks
         )
 
-    def build_direct_prompt(self, question, conversation=None, conversation_summary=""):
+    def _format_personality(self, personality_instruction):
+        instruction = str(personality_instruction or "").strip()
+        return instruction if instruction else "Use the default study assistant behavior."
+
+    def build_direct_prompt(self, question, conversation=None, conversation_summary="", personality_instruction=""):
         """Build a prompt that relies solely on the model's own knowledge."""
         return fill_prompt_template(
             self.direct_template,
+            personality_instruction=self._format_personality(personality_instruction),
             conversation_summary=self._format_summary(conversation_summary),
             conversation_history=self._format_conversation(conversation),
             question=question
         )
 
-    def build_prompt(self, context_chunks, question, conversation=None, conversation_summary=""):
+    def build_prompt(self, context_chunks, question, conversation=None, conversation_summary="", personality_instruction=""):
         """
         Inserts context and question into the 4T prompt template.
         
@@ -84,6 +89,7 @@ class PromptBuilder:
         )
         addendum = fill_prompt_template(
             self.rag_addendum_template,
+            personality_instruction=self._format_personality(personality_instruction),
             conversation_summary=self._format_summary(conversation_summary),
             conversation_history=self._format_conversation(conversation)
         )
@@ -92,10 +98,11 @@ class PromptBuilder:
             f"{addendum}"
         )
 
-    def build_hybrid_prompt(self, context_chunks, question, conversation=None, conversation_summary=""):
+    def build_hybrid_prompt(self, context_chunks, question, conversation=None, conversation_summary="", personality_instruction=""):
         """Build a prompt that uses documents first and separates model knowledge."""
         return fill_prompt_template(
             self.hybrid_template,
+            personality_instruction=self._format_personality(personality_instruction),
             conversation_summary=self._format_summary(conversation_summary),
             conversation_history=self._format_conversation(conversation),
             context=self._format_context(context_chunks),

@@ -17,6 +17,9 @@ Answer the student's question. Use the retrieved document context as the primary
 - The conversation summary is memory only; do not cite it as a source.
 - If the documents do not cover part of the question, say so before adding general model knowledge.
 
+## Personality Instructions
+{personality_instruction}
+
 ## Required Response Format
 Based on your documents:
 ...

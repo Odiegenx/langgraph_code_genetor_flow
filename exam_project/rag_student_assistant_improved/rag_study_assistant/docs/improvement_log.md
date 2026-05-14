@@ -548,3 +548,46 @@ Expected benefit:
 - Conversation management is attached to the conversation list.
 - Users can hide old study threads without losing the underlying local data.
 - The UI is simpler because the input area focuses on asking questions.
+
+### 2026-05-14: Added assistant personalities
+
+Reason:
+
+The app already supported RAG only, model only, and hybrid answer modes. Personalities add a second prompt-control dimension that is directly relevant to prompt engineering: role, tone, and target behavior.
+
+Change:
+
+Created:
+
+```text
+prompts/personalities/tutor.md
+prompts/personalities/exam_coach.md
+prompts/personalities/critical_reviewer.md
+```
+
+Updated:
+
+```text
+app.py
+rag/prompt_builder.py
+templates/index.html
+static/app.js
+validate_project.py
+README.md
+docs/runbook.md
+docs/user_guide.md
+```
+
+Added:
+
+```text
+GET /personalities
+```
+
+The selected personality is sent with `POST /ask` and injected into RAG only, model only, and hybrid prompts through the `{personality_instruction}` placeholder.
+
+Expected benefit:
+
+- Demonstrates role prompting in a practical study assistant.
+- Makes prompt behavior visible as Markdown artifacts.
+- Allows the same retrieved course material to be explained as Tutor, Exam Coach, or Critical Reviewer.

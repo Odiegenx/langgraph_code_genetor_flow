@@ -51,6 +51,7 @@ Output saved to: `site_validation_output.txt`
 - `GET /` – Serve main UI page
 - `POST /ask` – Accept question input and return answer + citations
 - `GET /models` – Return available Ollama models for the UI dropdown
+- `GET /personalities` – Return available assistant personality prompt roles
 - `POST /ingest` – Rebuild `index/chunks.json` from files in `documents/`
 - `GET /status` – Report whether documents and index are available
 - `GET /conversations` – Return the local conversation list
@@ -69,6 +70,7 @@ Output saved to: `site_validation_output.txt`
   "question": "What is acceptance testing?",
   "model": "qwen3:8b",
   "answer_mode": "hybrid",
+  "personality": "exam_coach",
   "conversation_id": "20260507_120000_abcd1234"
 }
 ```
@@ -94,6 +96,9 @@ Runtime prompt files:
 - `prompts/direct_answer_prompt.md`: model-only answer prompt
 - `prompts/hybrid_answer_prompt.md`: hybrid RAG + model knowledge prompt
 - `prompts/summary_prompt.md`: conversation memory compression prompt
+- `prompts/personalities/tutor.md`: tutor personality instructions
+- `prompts/personalities/exam_coach.md`: exam coach personality instructions
+- `prompts/personalities/critical_reviewer.md`: critical reviewer personality instructions
 
 ### Index Files
 Generated after running `rag/ingest.py`:

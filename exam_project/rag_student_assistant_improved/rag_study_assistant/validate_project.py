@@ -22,6 +22,9 @@ REQUIRED_FILES = [
     "prompts/rag_4t_prompt.md",
     "prompts/rag_answer_addendum.md",
     "prompts/summary_prompt.md",
+    "prompts/personalities/tutor.md",
+    "prompts/personalities/exam_coach.md",
+    "prompts/personalities/critical_reviewer.md",
     "documents/sample_course_notes.md",
     "requirements.txt"
 ]
