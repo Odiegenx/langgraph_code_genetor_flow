@@ -15,6 +15,9 @@ Answer the student's question without using local document context.
 - Do not cite local documents in this mode because no document context is being provided.
 - The conversation summary is only memory of this dialogue. It is not a source and must not be cited as evidence.
 
+## Personality Instructions
+{personality_instruction}
+
 ## Conversation Summary
 {conversation_summary}
 

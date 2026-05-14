@@ -162,6 +162,36 @@ Sources:
 
 The model must not invent citations. Only retrieved document chunks can be listed as sources.
 
+## Personalities
+
+The app supports three assistant personalities:
+
+- `Tutor`: explains step by step and focuses on understanding.
+- `Exam Coach`: gives concise exam-oriented answers with key terms and phrasing.
+- `Critical Reviewer`: challenges weak assumptions and points out missing nuance.
+
+The personality list is loaded from:
+
+```text
+GET /personalities
+```
+
+The selected personality is sent with each question:
+
+```text
+POST /ask
+```
+
+Personality prompts are stored as Markdown files:
+
+```text
+prompts/personalities/tutor.md
+prompts/personalities/exam_coach.md
+prompts/personalities/critical_reviewer.md
+```
+
+`rag/prompt_builder.py` injects the selected personality instructions into RAG only, model only, and hybrid prompts.
+
 ## 4T prompt engineering
 
 The 4T prompt is stored here:
@@ -178,6 +208,9 @@ prompts/rag_answer_addendum.md
 prompts/direct_answer_prompt.md
 prompts/hybrid_answer_prompt.md
 prompts/summary_prompt.md
+prompts/personalities/tutor.md
+prompts/personalities/exam_coach.md
+prompts/personalities/critical_reviewer.md
 ```
 
 It contains:
@@ -200,7 +233,7 @@ The app inserts:
 
 For hybrid mode, `rag/prompt_builder.py` adds guardrails that require document-based information and model knowledge to be separated.
 
-`rag/prompt_builder.py` is responsible for loading prompt templates and filling placeholders such as `{context}`, `{question}`, `{conversation_summary}`, and `{conversation_history}`. The prompt instructions themselves live in Markdown files, not directly in Python code.
+`rag/prompt_builder.py` is responsible for loading prompt templates and filling placeholders such as `{context}`, `{question}`, `{conversation_summary}`, `{conversation_history}`, and `{personality_instruction}`. The prompt instructions themselves live in Markdown files, not directly in Python code.
 
 ## Validation
 

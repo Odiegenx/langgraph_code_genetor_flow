@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionInput = document.getElementById('question-input');
     const modelSelect = document.getElementById('model-select');
     const answerModeSelect = document.getElementById('answer-mode-select');
+    const personalitySelect = document.getElementById('personality-select');
     const submitButton = document.getElementById('submit-btn');
     const ingestButton = document.getElementById('ingest-btn');
     const uploadButton = document.getElementById('upload-btn');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let summaryTriggerMessages = 10;
 
     updateModels();
+    updatePersonalities();
     updateStatus();
     loadConversations();
     
@@ -30,10 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const uploadStatus = document.getElementById('upload-status');
 
-    const useRagCheckbox = document.getElementById('use-rag-checkbox');
-
-    updateModels();
-    updateStatus();
     initializeUpload();
 
     uploadButton.addEventListener('click', () => {
@@ -68,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     question,
                     conversation_id: activeConversationId,
                     model: modelSelect.value,
-                    answer_mode: answerMode
+                    answer_mode: answerMode,
+                    personality: personalitySelect.value
                 })
 
             });
@@ -189,6 +188,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function updatePersonalities() {
+        try {
+            const response = await fetch('/personalities');
+            const data = await response.json();
+            const personalities = data.personalities && data.personalities.length > 0
+                ? data.personalities
+                : [{ id: 'tutor', label: 'Tutor' }];
+
+            personalitySelect.innerHTML = personalities.map(personality =>
+                `<option value="${escapeHtml(personality.id)}">${escapeHtml(personality.label)}</option>`
+            ).join('');
+
+            if (data.default_personality) {
+                personalitySelect.value = data.default_personality;
+            }
+        } catch (err) {
+            personalitySelect.innerHTML = '<option value="tutor">Tutor</option>';
+        }
+    }
+
     async function loadConversations(preferredConversationId = null) {
         try {
             const response = await fetch('/conversations');
@@ -235,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadButton.disabled = isLoading;
         modelSelect.disabled = isLoading;
         answerModeSelect.disabled = isLoading;
+        personalitySelect.disabled = isLoading;
         newConversationButton.disabled = isLoading;
     }
 
@@ -344,7 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 message.role,
                 message.content,
                 message.model,
-                message.answer_mode
+                message.answer_mode,
+                message.personality
             );
         });
     }
@@ -354,13 +375,14 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessageElement(role, content);
     }
 
-    function appendMessageElement(role, content, model = null, answerMode = null) {
+    function appendMessageElement(role, content, model = null, answerMode = null, personality = null) {
         const message = document.createElement('article');
         message.className = `chat-message ${role}`;
 
         const metaParts = [role === 'user' ? 'You' : 'Assistant'];
         if (model) metaParts.push(`Model: ${model}`);
         if (answerMode) metaParts.push(`Mode: ${formatAnswerMode(answerMode)}`);
+        if (personality) metaParts.push(`Personality: ${formatPersonality(personality)}`);
 
         const meta = document.createElement('div');
         meta.className = 'message-meta';
@@ -379,6 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (value === 'rag') return 'RAG only';
         if (value === 'model') return 'Model only';
         if (value === 'hybrid') return 'Hybrid';
+        return value;
+    }
+
+    function formatPersonality(value) {
+        if (value === 'tutor') return 'Tutor';
+        if (value === 'exam_coach') return 'Exam Coach';
+        if (value === 'critical_reviewer') return 'Critical Reviewer';
         return value;
     }
 

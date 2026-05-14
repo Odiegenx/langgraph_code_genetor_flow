@@ -17,6 +17,7 @@ docs/user_guide.md
 - **Keyword-Based Retrieval**: Uses BM25/TF-IDF for efficient chunk matching
 - **Source Citations**: Answers always include references to original documents
 - **Answer Modes**: Supports RAG only, model only, and hybrid answers
+- **Assistant Personalities**: Supports Tutor, Exam Coach, and Critical Reviewer prompt roles
 - **Conversation UI**: Supports follow-up questions and multiple visible conversation threads
 - **Persistent Local Conversations**: Stores conversation sessions in local runtime JSON files
 - **Conversation Summary + Archive**: Compresses older messages for prompts, caps summary size, and keeps an exact local archive

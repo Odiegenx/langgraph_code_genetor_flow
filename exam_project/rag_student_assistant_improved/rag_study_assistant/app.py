@@ -19,7 +19,14 @@ CONVERSATION_INDEX_FILE = os.path.join(CONVERSATION_DIR, "index.json")
 CONVERSATION_SESSIONS_DIR = os.path.join(CONVERSATION_DIR, "sessions")
 LEGACY_CONVERSATION_FILE = os.path.join(CONVERSATION_DIR, "current_session.json")
 SUMMARY_PROMPT_FILE = Path("prompts/summary_prompt.md")
+PERSONALITY_DIR = Path("prompts/personalities")
+DEFAULT_PERSONALITY = "tutor"
 VALID_ANSWER_MODES = {"rag", "model", "hybrid"}
+PERSONALITY_LABELS = {
+    "tutor": "Tutor",
+    "exam_coach": "Exam Coach",
+    "critical_reviewer": "Critical Reviewer"
+}
 RECENT_MESSAGE_LIMIT = 6
 SUMMARY_TRIGGER_MESSAGES = 10
 SUMMARY_TIMEOUT_SECONDS = 240
@@ -253,6 +260,26 @@ def fill_text_template(template, **values):
         output = output.replace(f"{{{key}}}", str(value))
     return output
 
+def available_personalities():
+    personalities = []
+    for personality_id, label in PERSONALITY_LABELS.items():
+        path = PERSONALITY_DIR / f"{personality_id}.md"
+        if path.exists():
+            personalities.append({
+                "id": personality_id,
+                "label": label,
+                "default": personality_id == DEFAULT_PERSONALITY
+            })
+    return personalities
+
+def normalize_personality(personality_id):
+    personality_id = str(personality_id or DEFAULT_PERSONALITY).strip()
+    return personality_id if personality_id in PERSONALITY_LABELS else DEFAULT_PERSONALITY
+
+def load_personality_instruction(personality_id):
+    personality_id = normalize_personality(personality_id)
+    return load_text_file(PERSONALITY_DIR / f"{personality_id}.md")
+
 def build_summary_prompt(existing_summary, older_messages):
     return fill_text_template(
         load_text_file(SUMMARY_PROMPT_FILE),
@@ -334,6 +361,8 @@ def ask_question():
         if not question:
             return jsonify({"error": "Question is required"}), 400
 
+        personality = normalize_personality(data.get("personality"))
+        personality_instruction = load_personality_instruction(personality)
         conversation_id = ensure_conversation(data.get("conversation_id"))
         persisted_conversation = summarize_if_needed(
             load_conversation(conversation_id),
@@ -351,14 +380,16 @@ def ask_question():
             question,
             conversation_id=conversation_id,
             model=selected_model or get_model(),
-            answer_mode=answer_mode
+            answer_mode=answer_mode,
+            personality=personality
         )
 
         if answer_mode == "model":
             prompt = prompt_builder.build_direct_prompt(
                 question,
                 conversation=safe_conversation,
-                conversation_summary=conversation_summary
+                conversation_summary=conversation_summary,
+                personality_instruction=personality_instruction
             )
             answer = ask_ollama(prompt, model=selected_model)
             answer_text = answer[0] if isinstance(answer, tuple) else answer
@@ -368,6 +399,7 @@ def ask_question():
                 conversation_id=conversation_id,
                 model=selected_model or get_model(),
                 answer_mode="model",
+                personality=personality,
                 use_rag=False,
                 citations=[]
             )
@@ -376,6 +408,7 @@ def ask_question():
                 "citations": [],
                 "model": selected_model or get_model(),
                 "answer_mode": "model",
+                "personality": personality,
                 "use_rag": False,
                 "conversation": conversation_response(updated_conversation, conversation_id)
             }), 200
@@ -401,14 +434,16 @@ def ask_question():
                 context_chunks,
                 question,
                 conversation=safe_conversation,
-                conversation_summary=conversation_summary
+                conversation_summary=conversation_summary,
+                personality_instruction=personality_instruction
             )
         else:
             prompt = prompt_builder.build_prompt(
                 context_chunks,
                 question,
                 conversation=safe_conversation,
-                conversation_summary=conversation_summary
+                conversation_summary=conversation_summary,
+                personality_instruction=personality_instruction
             )
         answer = ask_ollama(prompt, model=selected_model)
         answer_text = answer[0] if isinstance(answer, tuple) else answer
@@ -427,6 +462,7 @@ def ask_question():
             conversation_id=conversation_id,
             model=selected_model or get_model(),
             answer_mode=answer_mode,
+            personality=personality,
             use_rag=True,
             citations=retrieved
         )
@@ -436,6 +472,7 @@ def ask_question():
             "citations": retrieved,
             "model": selected_model or get_model(),
             "answer_mode": answer_mode,
+            "personality": personality,
             "use_rag": True,
             "conversation": conversation_response(updated_conversation, conversation_id)
         }), 200
@@ -521,6 +558,13 @@ def models():
             "models": [get_model()],
             "error": str(e)
         }), 200
+
+@app.route("/personalities", methods=["GET"])
+def personalities():
+    return jsonify({
+        "default_personality": DEFAULT_PERSONALITY,
+        "personalities": available_personalities()
+    }), 200
 
 @app.route("/ingest", methods=["POST"])
 def ingest_documents():
