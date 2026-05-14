@@ -33,7 +33,7 @@ docs/user_guide.md
 
 1. Open the project folder:
    ```powershell
-   cd "C:\Users\pf\Desktop\Skole\LLM for Developers\LLM\mandetory1\Mandatory-1 real\exam_project\rag_student_assistant_improved\rag_study_assistant"
+   cd "exam_project\rag_student_assistant_improved\rag_study_assistant"
    ```
 
 2. Install dependencies:
