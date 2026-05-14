@@ -16,6 +16,10 @@ docs/user_guide.md
 - **Document Ingestion**: Supports `.txt`, `.md`, and `.pdf` files
 - **Keyword-Based Retrieval**: Uses BM25/TF-IDF for efficient chunk matching
 - **Source Citations**: Answers always include references to original documents
+- **Answer Modes**: Supports RAG only, model only, and hybrid answers
+- **Conversation UI**: Supports follow-up questions and multiple visible conversation threads
+- **Persistent Local Conversations**: Stores conversation sessions in local runtime JSON files
+- **Conversation Summary + Archive**: Compresses older messages for prompts, caps summary size, and keeps an exact local archive
 - **Educational UI**: Clean, responsive interface optimized for study sessions
 
 ## Prerequisites
@@ -65,6 +69,11 @@ docs/user_guide.md
 
 5. Ask questions about your course material and receive answers grounded in your documents.
 
+6. Choose answer mode:
+   - `RAG only`: answer from documents
+   - `Model only`: answer from model knowledge
+   - `Hybrid`: documents first, then clearly separated model knowledge
+
 ## Configuration
 
 Set environment variables to customize behavior:
@@ -91,9 +100,14 @@ rag_study_assistant/
 │   ├── prompt_builder.py    # 4T prompt construction
 │   └── ollama_client.py     # Ollama API client
 ├── prompts/
-│   └── rag_4t_prompt.md     # 4T prompt template
+│   ├── rag_4t_prompt.md     # RAG-only 4T prompt template
+│   ├── direct_answer_prompt.md
+│   ├── hybrid_answer_prompt.md
+│   ├── rag_answer_addendum.md
+│   └── summary_prompt.md
 ├── documents/               # Your course notes go here
 ├── index/                   # Generated index files
+├── conversations/           # Runtime conversation memory, ignored by git
 ├── static/                  # Frontend assets
 ├── templates/               # HTML templates
 ├── docs/                    # Documentation
@@ -111,6 +125,7 @@ For detailed information about this project, see:
 - [Runbook](docs/runbook.md)
 - [Limitations](docs/limitations.md)
 - [MVP fix log](docs/mvp_fix_log.md)
+- [Feature roadmap](docs/feature_roadmap.md)
 
 ## Troubleshooting
 

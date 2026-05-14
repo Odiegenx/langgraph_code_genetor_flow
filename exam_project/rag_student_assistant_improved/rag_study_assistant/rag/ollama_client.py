@@ -21,7 +21,7 @@ def list_models() -> List[str]:
         if model.get("name") or model.get("model")
     )
 
-def ask_ollama(prompt: str, model: str = None) -> Union[Tuple[str, float], str]:
+def ask_ollama(prompt: str, model: str = None, timeout: int = 120) -> Union[Tuple[str, float], str]:
     """
     Send prompt to Ollama API and return answer and confidence.
     Returns: (answer_text, confidence_score) or just answer_text
@@ -36,7 +36,7 @@ def ask_ollama(prompt: str, model: str = None) -> Union[Tuple[str, float], str]:
     }
 
     try:
-        response = requests.post(OLLAMA_API_URL, json=payload, timeout=120)
+        response = requests.post(OLLAMA_API_URL, json=payload, timeout=timeout)
         response.raise_for_status()
         data = response.json()
         answer = data.get("message", {}).get("content", "").strip()

@@ -17,7 +17,11 @@ REQUIRED_FILES = [
     "rag/retrieve.py",
     "rag/prompt_builder.py",
     "rag/ollama_client.py",
+    "prompts/direct_answer_prompt.md",
+    "prompts/hybrid_answer_prompt.md",
     "prompts/rag_4t_prompt.md",
+    "prompts/rag_answer_addendum.md",
+    "prompts/summary_prompt.md",
     "documents/sample_course_notes.md",
     "requirements.txt"
 ]
