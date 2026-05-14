@@ -20,6 +20,44 @@
             </div>
             <div id="conversation-session-list"></div>
         </aside>
+    <main>
+        <section id="upload-section" class="modal hidden">
+            <div class="modal-content">
+                <button id="close-upload-btn" type="button" class="modal-close">×</button>
+
+                <h2>Upload Documents</h2>
+
+                 <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <p>Drag and drop files here or <span class="upload-link">click to browse</span></p>
+                        <p class="file-types">Supported: PDF, TXT, DOCX</p>
+                    </div>
+
+                    <input type="file" id="file-input" multiple accept=".pdf,.txt,.docx" style="display: none;">
+                </div>
+
+                <div id="upload-status" class="hidden"></div>
+            </div>
+        </section>
+
+        <section id="input-section">
+            <h2> Ask Questions</h2>
+            <label for="model-select">Model</label>
+            <select id="model-select">
+                <option value="">Loading models...</option>
+            </select>
+            <textarea id="question-input" placeholder="Enter your question here..."></textarea>
+            <div id="rag-toggle">
+                <label>
+                    <input type="checkbox" id="use-rag-checkbox" checked>
+                    Use RAG (answer from your documents)
+                </label>
+            </div>
+            <button id="submit-btn">Submit Question</button>
+            <button id="ingest-btn" type="button">Re-ingest documents</button>
+            <button id="upload-btn" type="button">Upload documents</button>
+            <div id="loading" class="hidden">⏳ Processing your question...</div>
+        </section>
 
         <div class="workspace">
             <section id="answer-section" class="hidden">

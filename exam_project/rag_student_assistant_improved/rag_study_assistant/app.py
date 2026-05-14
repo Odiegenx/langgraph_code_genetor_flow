@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from werkzeug.utils import secure_filename
 from rag.ingest import process_documents
 from rag.retrieve import score_chunks, load_index
 from rag.prompt_builder import PromptBuilder
@@ -300,6 +301,10 @@ def summarize_if_needed(conversation, model=None, conversation_id=None):
     }
     save_conversation(summarized_conversation, conversation_id)
     return summarized_conversation
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/")
 def index():
@@ -524,6 +529,51 @@ def ingest_documents():
         return jsonify({"message": "Ingestion completed"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/upload", methods=["POST"])
+def upload_files():
+    try:
+        # Ensure documents directory exists
+        os.makedirs(DOCUMENTS_DIR, exist_ok=True)
+        
+        if 'files' not in request.files:
+            return jsonify({"error": "No files provided"}), 400
+        
+        files = request.files.getlist('files')
+        uploaded_files = []
+        errors = []
+        
+        for file in files:
+            if file.filename == '':
+                continue
+                
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(DOCUMENTS_DIR, filename)
+                
+                # Handle duplicate filenames
+                counter = 1
+                base_name, ext = os.path.splitext(filename)
+                while os.path.exists(filepath):
+                    filename = f"{base_name}_{counter}{ext}"
+                    filepath = os.path.join(DOCUMENTS_DIR, filename)
+                    counter += 1
+                
+                file.save(filepath)
+                uploaded_files.append(filename)
+            else:
+                errors.append(f"File '{file.filename}' has unsupported format")
+        
+        if uploaded_files:
+            message = f"Successfully uploaded {len(uploaded_files)} file(s): {', '.join(uploaded_files)}"
+            if errors:
+                message += f". Errors: {'; '.join(errors)}"
+            return jsonify({"message": message, "uploaded": uploaded_files}), 200
+        else:
+            return jsonify({"error": f"No valid files uploaded. {'; '.join(errors) if errors else ''}"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Upload failed: {str(e)}"}), 500
 
 @app.route("/status", methods=["GET"])
 def status_check():
