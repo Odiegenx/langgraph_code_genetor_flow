@@ -35,6 +35,7 @@ pnpm-debug.log*
 *.tmp
 *.temp
 site_validation_output.txt
+conversations/
 fixer_iteration_*_parse_error.txt
 worker_*_invalid_json_response.txt
 
