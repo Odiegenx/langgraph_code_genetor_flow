@@ -1,4 +1,4 @@
-# Local RAG Study Assistant
+# Local Tutor bot
 
 A locally-hosted Retrieval-Augmented Generation (RAG) system designed for students studying "LLM for Developers" course material. This system operates entirely offline using Ollama for LLM inference and simple keyword-based retrieval.
 
@@ -35,6 +35,7 @@ docs/user_guide.md
 
    **Windows (PowerShell)**
    ```powershell
+
    cd "exam_project/TutorBot-exam-project/TutorBot-v1"
    ```
 
@@ -141,7 +142,7 @@ OLLAMA_MODEL="qwen3:8b" .venv/bin/python app.py
 ## Project Structure
 
 ```
-rag_study_assistant/
+TutorBot-exam-project/
 ├── app.py                    # Main web application
 ├── rag/
 │   ├── ingest.py            # Document processing
