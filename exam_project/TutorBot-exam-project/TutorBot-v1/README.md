@@ -33,7 +33,7 @@ docs/user_guide.md
 
 1. Open the project folder:
    ```powershell
-   cd "exam_project\rag_student_assistant_improved\rag_study_assistant"
+   cd "exam_project\TutorBot-exam-project\TutorBot-v1"
    ```
 
 2. Install dependencies:
@@ -66,7 +66,7 @@ docs/user_guide.md
    .\.venv\Scripts\python.exe app.py
    ```
 
-4. Open your browser and navigate to `http://localhost:5000`
+4. Open your browser and navigate to `http://localhost:5500`
 
 5. Ask questions about your course material and receive answers grounded in your documents.
 
@@ -93,7 +93,7 @@ $env:OLLAMA_MODEL="qwen3:8b"
 ## Project Structure
 
 ```
-rag_study_assistant/
+TutorBot-exam-project/
 ├── app.py                    # Main web application
 ├── rag/
 │   ├── ingest.py            # Document processing
