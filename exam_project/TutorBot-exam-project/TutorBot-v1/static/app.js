@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeUploadButton = document.getElementById('close-upload-btn');
     const uploadSection = document.getElementById('upload-section');
     const answerSection = document.getElementById('answer-section');
+    const inputSection = document.getElementById('input-section');
+    const toggleInputBtn = document.getElementById('toggle-input-btn');
+
+    toggleInputBtn.addEventListener('click', () => {
+        inputSection.classList.toggle('minimized');
+    });
     const conversationList = document.getElementById('conversation-list');
     const conversationSessionList = document.getElementById('conversation-session-list');
     const newConversationButton = document.getElementById('new-conversation-btn');
