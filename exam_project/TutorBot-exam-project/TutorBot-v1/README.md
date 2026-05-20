@@ -49,7 +49,7 @@ exam_project/TutorBot-exam-project/TutorBot-v1/docs/user_guide.md
    **Windows (PowerShell)**
    ```powershell
    python -m venv .venv
-   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   .venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
    **macOS / Linux**
