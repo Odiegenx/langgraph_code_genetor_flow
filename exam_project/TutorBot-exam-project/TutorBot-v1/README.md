@@ -1,4 +1,4 @@
-# Local RAG Study Assistant
+# Local Tutor bot
 
 A locally-hosted Retrieval-Augmented Generation (RAG) system designed for students studying "LLM for Developers" course material. This system operates entirely offline using Ollama for LLM inference and simple keyword-based retrieval.
 
@@ -32,23 +32,53 @@ docs/user_guide.md
 ## Installation
 
 1. Open the project folder:
+
+   **Windows (PowerShell)**
    ```powershell
-   cd "exam_project\TutorBot-exam-project\TutorBot-v1"
+
+   cd "exam_project/TutorBot-exam-project/TutorBot-v1"
+   ```
+
+   **macOS / Linux**
+   ```bash
+   cd "exam_project/TutorBot-exam-project/TutorBot-v1"
    ```
 
 2. Install dependencies:
+
+   **Windows (PowerShell)**
    ```powershell
    python -m venv .venv
    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
+   **macOS / Linux**
+   ```bash
+   python3 -m venv .venv
+   .venv/bin/pip install -r requirements.txt
+   ```
+
 3. Ensure Ollama is running:
+
+   **Windows (PowerShell)**
    ```powershell
    ollama serve
    ```
 
+   **macOS / Linux**
+   ```bash
+   ollama serve
+   ```
+
 4. If you use the default cloud model, make sure Ollama is signed in:
+
+   **Windows (PowerShell)**
    ```powershell
+   ollama signin
+   ```
+
+   **macOS / Linux**
+   ```bash
    ollama signin
    ```
 
@@ -57,13 +87,27 @@ docs/user_guide.md
 1. Place your study materials (`.txt`, `.md`, `.pdf`) in the `documents/` folder.
 
 2. Ingest documents from the browser using `Re-ingest documents`, or run:
+
+   **Windows (PowerShell)**
    ```powershell
    .\.venv\Scripts\python.exe rag\ingest.py
    ```
 
+   **macOS / Linux**
+   ```bash
+   .venv/bin/python rag/ingest.py
+   ```
+
 3. Start the application:
+
+   **Windows (PowerShell)**
    ```powershell
    .\.venv\Scripts\python.exe app.py
+   ```
+
+   **macOS / Linux**
+   ```bash
+   .venv/bin/python app.py
    ```
 
 4. Open your browser and navigate to `http://localhost:5500`
@@ -84,10 +128,15 @@ Set environment variables to customize behavior:
 - `CHUNK_OVERLAP`: Overlap between consecutive chunks (default: 50)
 - `RETRIEVAL_K`: Number of top chunks to retrieve per query (default: 3)
 
-Example:
+**Windows (PowerShell)**
 ```powershell
 $env:OLLAMA_MODEL="qwen3:8b"
 .\.venv\Scripts\python.exe app.py
+```
+
+**macOS / Linux**
+```bash
+OLLAMA_MODEL="qwen3:8b" .venv/bin/python app.py
 ```
 
 ## Project Structure
@@ -134,7 +183,13 @@ For detailed information about this project, see:
 
 If the app finds sources but the answer says `401 Client Error: Unauthorized`, the selected Ollama cloud model requires login:
 
+**Windows (PowerShell)**
 ```powershell
+ollama signin
+```
+
+**macOS / Linux**
+```bash
 ollama signin
 ```
 
