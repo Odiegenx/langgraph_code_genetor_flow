@@ -5,7 +5,7 @@ A locally-hosted Retrieval-Augmented Generation (RAG) system designed for studen
 For the practical user guide, including where to add documents, how to ingest them, and how to troubleshoot Ollama issues, see:
 
 ```text
-docs/user_guide.md
+exam_project/TutorBot-exam-project/TutorBot-v1/docs/user_guide.md
 ```
 
 ## Features
